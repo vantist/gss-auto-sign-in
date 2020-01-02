@@ -1,0 +1,28 @@
+{
+  "name": "gss-auto-sign-in",
+  "version": "0.0.1",
+  "description": "Auto Sign in",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vantist/gss-auto-sign-in.git"
+  },
+  "keywords": [
+    "gss",
+    "sign-in",
+    "auto"
+  ],
+  "author": "Vantist Lin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vantist/gss-auto-sign-in/issues"
+  },
+  "homepage": "https://github.com/vantist/gss-auto-sign-in#readme",
+  "dependencies": {
+    "@line/bot-sdk": "^6.8.4",
+    "express": "^4.17.1"
+  }
+}
