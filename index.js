@@ -52,10 +52,10 @@ function handleEvent(event) {
     return client.replyMessage(event.replyToken, reply);
   } else if (text === 'testlogin') {
     let user = userMaps[userId];
-    if (!user.account) {
+    if (!user || !user.account) {
       let reply = { type: 'text', text: '未設定帳號'};
       return client.replyMessage(event.replyToken, reply);
-    } else if (!user.password) {
+    } else if (!user || !user.password) {
       let reply = { type: 'text', text: '未設定密碼'};
       return client.replyMessage(event.replyToken, reply);
     }
@@ -69,10 +69,10 @@ function handleEvent(event) {
     });
   } else if (text === 'signin') {
     let user = userMaps[userId];
-    if (!user.account) {
+    if (!user || !user.account) {
       let reply = { type: 'text', text: '未設定帳號'};
       return client.replyMessage(event.replyToken, reply);
-    } else if (!user.password) {
+    } else if (!user || !user.password) {
       let reply = { type: 'text', text: '未設定密碼'};
       return client.replyMessage(event.replyToken, reply);
     }
