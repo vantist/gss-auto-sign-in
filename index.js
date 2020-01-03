@@ -9,6 +9,7 @@ const signin = require('./sign_in.js');
 const config = {
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
   channelSecret: process.env.CHANNEL_SECRET,
+  pingServer: process.env.PING_TARGET_SERVER
 };
 
 let userMaps = {};
@@ -30,6 +31,10 @@ app.post('/callback', line.middleware(config), (req, res) => {
       console.error(err);
       res.status(500).end();
     });
+});
+
+app.get('/ping', (req, res) => {
+  res.status(200).end();
 });
         
 // event handler
@@ -150,4 +155,11 @@ cron.schedule('0 30 8 * * 1-5', () => {
 cron.schedule('0 30 17 * * 1-5', () => {
   console.log('執行自動下班打卡');
   autoSignIn();
+});
+
+cron.schedule('0 10 * * * *', () => {
+  console.log('auto ping to ${config.pingServer}');
+  request.get(config.pingServer, (err, response) => {
+    console.log('auto ping to ${config.pingServer} done');
+  });
 });
