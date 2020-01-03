@@ -78,9 +78,9 @@ function handleEvent(event) {
     }
 
     let date = new Date();
-    let hour = `${date.getHours()}`.padStart(2, '0');
-    let minute = `${date.getMinutes()}`.padStart(2, '0');
-    let time = `${hour}${minute}`;
+    let h = `${date.getHours()}`.padStart(2, '0');
+    let m = `${date.getMinutes()}`.padStart(2, '0');
+    let time = `${h}${m}`;
 
     signin.signin(user.account, user.password, time).then(response => {
       let reply = { type: 'text', text: response};
