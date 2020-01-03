@@ -100,11 +100,11 @@ let signin = (request, time) => {
 
 module.exports = {
     signin: (account, password, time) => {
-        let rq = request.defaults({ jar: true, 'proxy': 'ibms.sinica.edu.tw' });
+        let rq = request.defaults({ jar: true, 'proxy': 'nas.vantist.tw:3128' });
         return login(rq, account, password).then(signin.bind(null, rq, time));
     },
     login: (account, password) => {
-        let rq = request.defaults({ jar: true, 'proxy': 'ibms.sinica.edu.tw' });
+        let rq = request.defaults({ jar: true, 'proxy': 'nas.vantist.tw:3128' });
         return login(rq, account, password);
     }
 }
