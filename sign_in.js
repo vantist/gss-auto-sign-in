@@ -1,4 +1,3 @@
-const request = require('request');
 const { JSDOM } = require('jsdom');
 const loginUrl = 'https://teamkube.gss.com.tw/cas/login?service=https://gssportal.gss.com.tw/hrportal/ssologin.aspx';
 const signinUrl = 'https://gssportal.gss.com.tw/HRPortal/Default.aspx';
@@ -26,7 +25,9 @@ let login = (request, account, password) => {
         ...options, 
     }).then((response) => {
         const { document } = (new JSDOM(response.body)).window;
-        console.log(response.body);
+        if (document.title !== 'Smart Form 電子表單') {
+            return { response };
+        }
         let lt = document.querySelector('input[name="lt"]').getAttribute('value');
         let host = document.querySelector('input[name="host"]').getAttribute('value');
         let eventId = document.querySelector('input[name="_eventId"]').getAttribute('value');
@@ -100,10 +101,12 @@ let signin = (request, time) => {
 
 module.exports = {
     signin: (account, password, time) => {
+        const request = require('request');
         let rq = request.defaults({ jar: true, 'proxy': 'http://nas.vantist.tw:3128' });
         return login(rq, account, password).then(signin.bind(null, rq, time));
     },
     login: (account, password) => {
+        const request = require('request');
         let rq = request.defaults({ jar: true, 'proxy': 'http://nas.vantist.tw:3128' });
         return login(rq, account, password);
     }
