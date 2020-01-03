@@ -78,9 +78,9 @@ function handleEvent(event) {
     }
 
     let date = new Date();
-    let h = `${date.getHours()}`.padStart(2, '0');
-    let m = `${date.getMinutes()}`.padStart(2, '0');
-    let time = `${h}${m}`;
+    let hour = `${date.getHours()}`.padStart(2, '0');
+    let minute = `${date.getMinutes()}`.padStart(2, '0');
+    let time = `${hour}${minute}`;
 
     signin.signin(user.account, user.password, time).then(response => {
       let reply = { type: 'text', text: response};
@@ -101,10 +101,10 @@ app.listen(port, () => {
   console.log(`listening on ${port}`);
 });
 
-cron.schedule('* 30 8 * *', () => {
+cron.schedule('* 30 8 * * 1-5', () => {
   console.log('執行上班打卡');
 });
 
-cron.schedule('* 30 17 * *', () => {
+cron.schedule('* 30 17 * * 1-5', () => {
   console.log('執行下班打卡');
 });
