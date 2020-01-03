@@ -158,7 +158,7 @@ cron.schedule('0 30 17 * * 1-5', () => {
   autoSignIn();
 });
 
-cron.schedule('0 10 * * * *', () => {
+cron.schedule('0 */10 * * * *', () => {
   console.log(`auto ping to ${config.pingServer}`);
   request.get(config.pingServer, {}, (err, response) => {
     console.log(`auto ping to ${config.pingServer} done`);
