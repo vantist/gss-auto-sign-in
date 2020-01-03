@@ -94,7 +94,7 @@ let signin = (request, time) => {
     }).catch(console.error);
 };
 
-exports = {
+module.exports = {
     signin: (account, password, time) => {
         let rq = request.defaults({ jar: true });
         return login(rq, account, password).then(signin.bind(null, rq, time));
