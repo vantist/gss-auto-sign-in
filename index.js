@@ -51,7 +51,7 @@ function handleEvent(event) {
     let reply = { type: 'text', text: '已設定密碼'};
     return client.replyMessage(event.replyToken, reply);
   } else if (text === 'testlogin') {
-    let user = useruserMaps[userId];
+    let user = userMaps[userId];
     if (!user.account) {
       let reply = { type: 'text', text: '未設定帳號'};
       return client.replyMessage(event.replyToken, reply);
@@ -68,7 +68,7 @@ function handleEvent(event) {
       return client.replyMessage(event.replyToken, reply);
     });
   } else if (text === 'signin') {
-    let user = useruserMaps[userId];
+    let user = userMaps[userId];
     if (!user.account) {
       let reply = { type: 'text', text: '未設定帳號'};
       return client.replyMessage(event.replyToken, reply);
