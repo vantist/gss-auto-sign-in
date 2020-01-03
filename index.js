@@ -34,7 +34,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
 });
 
 app.get('/ping', (req, res) => {
-  res.status(200).end();
+  res.send('done').status(200).end();
 });
         
 // event handler
