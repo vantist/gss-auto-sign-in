@@ -42,11 +42,11 @@ function handleEvent(event) {
   let userId = event.source.userId;
   let text = event.message.text;
 
-  if (text.startWith('account:')) {
+  if (text.indexOf('account:') === 0) {
     userMaps[userId].account = text.replace('account:', '').trim();
     let reply = { type: 'text', text: '已設定帳號: ' + userMaps[userId].account };
     return client.replyMessage(event.replyToken, reply);
-  } else if (text.startWith('password:')) {
+  } else if (text.indexOf('password:') === 0) {
     userMaps[userId].account = text.replace('password:', '').trim();
     let reply = { type: 'text', text: '已設定密碼'};
     return client.replyMessage(event.replyToken, reply);
