@@ -82,6 +82,7 @@ function handleEvent(event) {
     }
 
     let date = new Date();
+    date.setTime(date.getTime() - 60000);
     let hour = `${date.getHours()}`.padStart(2, '0');
     let minute = `${date.getMinutes()}`.padStart(2, '0');
     let time = `${hour}${minute}`;
@@ -99,6 +100,35 @@ function handleEvent(event) {
   }
 }
 
+let getRandom = (min, max) => {
+  return Math.floor(Math.random()*max)+min;
+};
+
+let autoSignIn = () => {
+  userMaps.keys().forEach(userId => {
+    setTimeout(function(userId) {
+      let user = userMaps[userId];
+      let date = new Date();
+      date.setTime(date.getTime() - 60000);
+      let hour = `${date.getHours()}`.padStart(2, '0');
+      let minute = `${date.getMinutes()}`.padStart(2, '0');
+      let time = `${hour}${minute}`;
+
+      if (!(user && user.account && user.password)) {
+        return;
+      }
+
+      signin.signin(user.account, user.password, time).then(response => {
+        let reply = { type: 'text', text: response};
+        client.pushMessage(user, reply);
+      }).catch(e => {
+        let reply = { type: 'text', text: '打卡失敗: ' + e};
+        client.pushMessage(user, reply);
+      });
+    }.bind(null, userId), getRandom(0, 2 * 1000 * 60));
+  });
+};
+
 // listen on port
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
@@ -107,8 +137,15 @@ app.listen(port, () => {
 
 cron.schedule('* 30 8 * * 1-5', () => {
   console.log('執行上班打卡');
+  autoSignIn();
 });
 
 cron.schedule('* 30 17 * * 1-5', () => {
   console.log('執行下班打卡');
+  autoSignIn();
+});
+
+cron.schedule('* 25 * * * *', () => {
+  console.log('測試排程打卡');
+  autoSignIn();
 });
