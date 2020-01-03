@@ -49,10 +49,10 @@ let login = (request, account, password) => {
     }).then((response) => {
         const { document } = (new JSDOM(response.body)).window;
         if (document.title !== 'Smart Form 電子表單') {
-            console.error('SSO 登入失敗');
+            console.error(`${account} SSO 登入失敗`);
             throw new Error('login failed');
         } else {
-            console.log('SSO 登入成功');
+            console.log(`${account} SSO 登入成功`);
         }
     }).catch((e) => {
         console.error(e);

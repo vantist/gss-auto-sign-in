@@ -110,7 +110,7 @@ let getRandom = (min, max) => {
 
 let autoSignIn = (test) => {
   Object.keys(userMaps).forEach(userId => {
-    let offset = test ? 0 : getRandom(0, 2 * 1000 * 60);
+    let offset = test ? 0 : getRandom(0, 20) * 60 * 1000;
     console.log(`enqeeue auto Sign In for ${userId} , wait ${offset} ms`);
     setTimeout(function(userId) {
       let user = userMaps[userId];
