@@ -25,7 +25,7 @@ let login = (request, account, password) => {
         ...options, 
     }).then((response) => {
         const { document } = (new JSDOM(response.body)).window;
-        if (document.title !== 'Smart Form 電子表單') {
+        if (document.title === 'Smart Form 電子表單') {
             return { response };
         }
         let lt = document.querySelector('input[name="lt"]').getAttribute('value');
