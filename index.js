@@ -42,6 +42,10 @@ function handleEvent(event) {
   let userId = event.source.userId;
   let text = event.message.text;
 
+  if (!userMaps[userId]) {
+    userMaps[userId] = {};
+  }
+
   if (text.indexOf('account:') === 0) {
     userMaps[userId].account = text.replace('account:', '').trim();
     let reply = { type: 'text', text: '已設定帳號: ' + userMaps[userId].account };
