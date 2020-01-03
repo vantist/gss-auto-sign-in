@@ -146,7 +146,7 @@ cron.schedule('* 30 17 * * 1-5', () => {
   autoSignIn();
 });
 
-cron.schedule('* 32 * * * *', () => {
+cron.schedule('* 35 * * * *', () => {
   console.log('測試排程打卡');
   autoSignIn();
 });
