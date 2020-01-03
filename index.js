@@ -90,7 +90,7 @@ function handleEvent(event) {
       return client.replyMessage(event.replyToken, reply);
     });
   } else {
-    let reply = { type: 'text', text: 'help: \n設定帳號 account:xxxx \n 設定密碼 password:xxx \n 測試帳號連線 testlogin\n 立即打卡 signin'};
+    let reply = { type: 'text', text: 'help:\n設定帳號 account:xxxx\n設定密碼 password:xxx\n測試帳號連線 testlogin\n立即打卡 signin'};
     return client.replyMessage(event.replyToken, reply);
   }
 }
