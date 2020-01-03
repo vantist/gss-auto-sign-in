@@ -120,12 +120,13 @@ let autoSignIn = () => {
 
       signin.signin(user.account, user.password, time).then(response => {
         let reply = { type: 'text', text: response};
-        client.pushMessage(user, reply);
+        client.pushMessage(userId, reply);
       }).catch(e => {
         let reply = { type: 'text', text: '打卡失敗: ' + e};
-        client.pushMessage(user, reply);
+        client.pushMessage(userId, reply);
       });
-    }.bind(null, userId), getRandom(0, 2 * 1000 * 60));
+    // }.bind(null, userId), getRandom(0, 2 * 1000 * 60));
+    }.bind(null, userId), getRandom(0, 2 * 1000));
   });
 };
 
@@ -145,7 +146,7 @@ cron.schedule('* 30 17 * * 1-5', () => {
   autoSignIn();
 });
 
-cron.schedule('* 25 * * * *', () => {
+cron.schedule('* 32 * * * *', () => {
   console.log('測試排程打卡');
   autoSignIn();
 });
