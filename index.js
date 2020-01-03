@@ -105,7 +105,7 @@ let getRandom = (min, max) => {
 };
 
 let autoSignIn = () => {
-  userMaps.keys().forEach(userId => {
+  Object.keys(userMaps).forEach(userId => {
     setTimeout(function(userId) {
       let user = userMaps[userId];
       let date = new Date();
