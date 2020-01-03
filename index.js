@@ -4,6 +4,7 @@ const line = require('@line/bot-sdk');
 const express = require('express');
 const cron = require('node-cron');
 const signin = require('./sign_in.js');
+const request = require('request');
 
 // create LINE SDK config from env variables
 const config = {
