@@ -52,32 +52,32 @@ function handleEvent(event) {
     return client.replyMessage(event.replyToken, reply);
   } else if (text.indexOf('password:') === 0) {
     userMaps[userId].password = text.replace('password:', '').trim();
-    let reply = { type: 'text', text: '已設定密碼'};
+    let reply = { type: 'text', text: '已設定密碼' };
     return client.replyMessage(event.replyToken, reply);
   } else if (text === 'testlogin') {
     let user = userMaps[userId];
     if (!user || !user.account) {
-      let reply = { type: 'text', text: '未設定帳號'};
+      let reply = { type: 'text', text: '未設定帳號' };
       return client.replyMessage(event.replyToken, reply);
     } else if (!user || !user.password) {
-      let reply = { type: 'text', text: '未設定密碼'};
+      let reply = { type: 'text', text: '未設定密碼' };
       return client.replyMessage(event.replyToken, reply);
     }
 
     signin.login(user.account, user.password).then(() => {
-      let reply = { type: 'text', text: '登入成功'};
+      let reply = { type: 'text', text: '登入成功' };
       return client.replyMessage(event.replyToken, reply);
     }).catch(e => {
-      let reply = { type: 'text', text: '登入失敗: ' + e};
+      let reply = { type: 'text', text: '登入失敗: ' + e };
       return client.replyMessage(event.replyToken, reply);
     });
   } else if (text === 'signin') {
     let user = userMaps[userId];
     if (!user || !user.account) {
-      let reply = { type: 'text', text: '未設定帳號'};
+      let reply = { type: 'text', text: '未設定帳號' };
       return client.replyMessage(event.replyToken, reply);
     } else if (!user || !user.password) {
-      let reply = { type: 'text', text: '未設定密碼'};
+      let reply = { type: 'text', text: '未設定密碼' };
       return client.replyMessage(event.replyToken, reply);
     }
 
@@ -88,12 +88,16 @@ function handleEvent(event) {
     let time = `${hour}${minute}`;
 
     signin.signin(user.account, user.password, time).then(response => {
-      let reply = { type: 'text', text: response};
+      let reply = { type: 'text', text: response };
       return client.replyMessage(event.replyToken, reply);
     }).catch(e => {
-      let reply = { type: 'text', text: '打卡失敗: ' + e};
+      let reply = { type: 'text', text: '打卡失敗: ' + e };
       return client.replyMessage(event.replyToken, reply);
     });
+  } else if (text === 'testcron') {
+    let reply = { type: 'text', text: '開始自動打卡測試' };
+    autoSignIn();
+    return client.replyMessage(event.replyToken, reply);
   } else {
     let reply = { type: 'text', text: 'help:\n設定帳號 account:xxxx\n設定密碼 password:xxx\n測試帳號連線 testlogin\n立即打卡 signin'};
     return client.replyMessage(event.replyToken, reply);
@@ -104,8 +108,10 @@ let getRandom = (min, max) => {
   return Math.floor(Math.random()*max)+min;
 };
 
-let autoSignIn = () => {
+let autoSignIn = (test) => {
   Object.keys(userMaps).forEach(userId => {
+    let offset = test ? 0 : getRandom(0, 2 * 1000 * 60);
+    console.log(`enqeeue auto Sign In for ${userId} , wait ${offset} ms`);
     setTimeout(function(userId) {
       let user = userMaps[userId];
       let date = new Date();
@@ -118,15 +124,15 @@ let autoSignIn = () => {
         return;
       }
 
+      console.log(`auto Sign In for ${user.account}`);
       signin.signin(user.account, user.password, time).then(response => {
-        let reply = { type: 'text', text: response};
+        let reply = { type: 'text', text: response };
         client.pushMessage(userId, reply);
       }).catch(e => {
-        let reply = { type: 'text', text: '打卡失敗: ' + e};
+        let reply = { type: 'text', text: '打卡失敗: ' + e };
         client.pushMessage(userId, reply);
       });
-    // }.bind(null, userId), getRandom(0, 2 * 1000 * 60));
-    }.bind(null, userId), getRandom(0, 2 * 1000 * 60));
+    }.bind(null, userId), offset);
   });
 };
 
@@ -136,12 +142,12 @@ app.listen(port, () => {
   console.log(`listening on ${port}`);
 });
 
-cron.schedule('* 30 8 * * 1-5', () => {
-  console.log('執行上班打卡');
+cron.schedule('0 30 8 * * 1-5', () => {
+  console.log('執行自動上班打卡');
   autoSignIn();
 });
 
-cron.schedule('* 30 17 * * 1-5', () => {
-  console.log('執行下班打卡');
+cron.schedule('0 30 17 * * 1-5', () => {
+  console.log('執行自動下班打卡');
   autoSignIn();
 });
