@@ -26,6 +26,7 @@ let login = (request, account, password) => {
         ...options, 
     }).then((response) => {
         const { document } = (new JSDOM(response.body)).window;
+        console.log(response.body);
         let lt = document.querySelector('input[name="lt"]').getAttribute('value');
         let host = document.querySelector('input[name="host"]').getAttribute('value');
         let eventId = document.querySelector('input[name="_eventId"]').getAttribute('value');
@@ -52,7 +53,10 @@ let login = (request, account, password) => {
         } else {
             console.log('SSO 登入成功');
         }
-    }).catch(console.error);
+    }).catch((e) => {
+        console.error(e);
+        throw new Error('不知名錯誤');
+    });
 };
 
 let signin = (request, time) => {
