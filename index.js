@@ -51,7 +51,7 @@ function handleEvent(event) {
     let reply = { type: 'text', text: '已設定帳號: ' + userMaps[userId].account };
     return client.replyMessage(event.replyToken, reply);
   } else if (text.indexOf('password:') === 0) {
-    userMaps[userId].account = text.replace('password:', '').trim();
+    userMaps[userId].password = text.replace('password:', '').trim();
     let reply = { type: 'text', text: '已設定密碼'};
     return client.replyMessage(event.replyToken, reply);
   } else if (text === 'testlogin') {
