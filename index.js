@@ -5,6 +5,7 @@ const express = require('express');
 const cron = require('node-cron');
 const signin = require('./sign_in.js');
 const request = require('request');
+const bodyParser = require('body-parser');
 
 // create LINE SDK config from env variables
 const config = {
@@ -22,6 +23,9 @@ const client = new line.Client(config);
 // about Express itself: https://expressjs.com/
 const app = express();
 
+// static files
+app.use(express.static('liff'));
+
 // register a webhook handler with middleware
 // about the middleware, please refer to doc
 app.post('/callback', line.middleware(config), (req, res) => {
@@ -35,9 +39,54 @@ app.post('/callback', line.middleware(config), (req, res) => {
 });
 
 app.get('/ping', (req, res) => {
-  res.send('done').status(200).end();
+  res.send('done');
 });
-        
+
+app.post('/setting', bodyParser.urlencoded({ extended: true }), (req, res) => {
+  if (!req.body.userId) {
+    res.status(500).send('userId is empty.');
+    return;
+  }
+  if (!req.body.account) {
+    res.status(500).send('account is empty.');
+    return;
+  }
+  if (!req.body.password) {
+    res.status(500).send('password is empty.');
+    return;
+  }
+  userMaps[req.body.userId] = {
+    account: req.body.account, 
+    password: req.body.password
+  }
+  res.sendStatus(200);
+});
+
+app.get('/setting', (req, res) => {
+  if (!req.query.userId) {
+    res.status(500).send('userId is empty.');
+    return;
+  }
+  res.send(userMaps[req.query.userId]);
+});
+
+app.get('/signin', (req, res) => {
+  if (!req.query.userId) {
+    res.status(500).send('userId is empty.');
+    return;
+  }
+  if (!req.query.time) {
+    res.status(500).send('time is empty.');
+    return;
+  }
+  let user = userMaps[req.query.userId];
+  signin.signin(user.account, user.password, req.query.time).then(response => {
+    res.send(response);
+  }).catch(e => {
+    res.status(500).send(e);
+  });
+});
+
 // event handler
 function handleEvent(event) {
   if (event.type !== 'message' || event.message.type !== 'text') {
