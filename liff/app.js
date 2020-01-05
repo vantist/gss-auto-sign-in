@@ -9,6 +9,7 @@ $(document).ready(() => {
     setting(userInfo.userId, account, password)
       .then(initView)
       .catch((e) => {
+        console.log(e);
         window.alert(`綁定失敗, 因為: ${e}`);
         initView();
       });
@@ -72,7 +73,7 @@ function setting(userId, account, password) {
     })
   }).then((res) => {
     if (res.status !== 200) {
-      throw res.text();
+      return Promise.reject(res.text());
     }
   });
 }
