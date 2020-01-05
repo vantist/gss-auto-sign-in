@@ -18,8 +18,6 @@ $(document).ready(() => {
   $('.bind-info button.bind').on('click', () => {
     $('.bind-account').show();
     $('.bind-info').hide();
-    $('#inputAccount').val('');
-    $('#inputPassword').val('');
   });
 
   $('.bind-info button.cancel').on('click', () => {
@@ -42,6 +40,9 @@ function initView() {
   $('.bind-account').hide();
   $('.bind-info').hide();
   $('.lds-facebook').hide();
+  $('#inputAccount').val('');
+  $('#inputPassword').val('');
+  
   // start to use LIFF's api
   if (!liff.isLoggedIn() && !liff.isInClient()) {
     liff.login();
