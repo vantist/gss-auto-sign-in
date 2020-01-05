@@ -26,9 +26,6 @@ const app = express();
 // static files
 app.use('/liff', express.static('liff'));
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-
 // register a webhook handler with middleware
 // about the middleware, please refer to doc
 app.post('/callback', line.middleware(config), (req, res) => {
@@ -45,7 +42,7 @@ app.get('/ping', (req, res) => {
   res.send('done');
 });
 
-app.post('/setting', (req, res) => {
+app.post('/setting', bodyParser.json(), (req, res) => {
   if (!req.body.userId) {
     res.status(500).send('userId is empty.');
     return;
