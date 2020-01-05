@@ -1,26 +1,26 @@
 let userInfo = {};
-window.onload = function() {
-    $('.bind-account').hide();
-    $('.bind-info').hide();
+$(document).ready(() => {
+  $('.bind-account').hide();
+  $('.bind-info').hide();
 
-    $('.bind-account button').on('click', () => {
-      let account = $('#inputAccount').val().trim();
-      let password = $('#inputPassword').val().trim();
-      setting(userInfo.userId, account, password)
-        .then(initView)
-        .catch(() => {
-          window.alert('綁定失敗');
-          initView();
-        });
-    });
-  
-    liff.init({
-      liffId: '1653725533-Wg9REdXE'
-    }).then(initView)
-    .catch((err) => {
-      window.alert('Liff init failed');
-    });
-};
+  $('.bind-account button').on('click', () => {
+    let account = $('#inputAccount').val().trim();
+    let password = $('#inputPassword').val().trim();
+    setting(userInfo.userId, account, password)
+      .then(initView)
+      .catch(() => {
+        window.alert('綁定失敗');
+        initView();
+      });
+  });
+
+  liff.init({
+    liffId: '1653725533-Wg9REdXE'
+  }).then(initView)
+  .catch((err) => {
+    window.alert('Liff init failed');
+  });
+});
 
 function initView() {
   $('.bind-account').hide();
@@ -51,25 +51,21 @@ function initView() {
 }
 
 function getSetting(userId) {
-  return new Promise((resolve, reject) => {
-    $.get('../setting', { userId: userId }, (user) => {
-      resolve(JSON.parse(user));
-    }).fail(() => {
-      reject();
-    });
+  let url = new URL("../setting"),
+      params = { userId: userId };
+  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+  return fetch(url, { method: 'GET'} ).then((res) => {
+    return res.json();
   });
 }
 
 function setting(userId, account, password) {
-  return new Promise((resolve, reject) => {
-    $.post('../setting', {
+  return fetch('../setting', { 
+    method: 'POST',
+    body: {
       userId: userId,
       account: account,
       password: password
-    }, () => {
-      resolve();
-    }).fail(() => {
-      reject();
-    });
+    }
   });
 }
