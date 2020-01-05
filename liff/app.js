@@ -3,6 +3,7 @@ $(document).ready(() => {
   $('.bind-account button').on('click', () => {
     let account = $('#inputAccount').val().trim();
     let password = $('#inputPassword').val().trim();
+    $('.bind-account').hide();
     $('.lds-facebook').show();
     setting(userInfo.userId, account, password)
       .then(() => {
@@ -17,6 +18,8 @@ $(document).ready(() => {
   $('.bind-info button').on('click', () => {
     $('.bind-account').show();
     $('.bind-info').hide();
+    $('#inputAccount').val('');
+    $('#inputPassword').val('');
   });
 
   liff.init({
