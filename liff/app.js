@@ -11,7 +11,7 @@ $(document).ready(() => {
       })
       .catch((e) => {
         console.log(e);
-        window.alert(`綁定失敗, 因為: ${e.toString()}`);
+        window.alert(`綁定失敗, 因為: ${e.message}`);
       }).then(initView);
   });
 
@@ -42,7 +42,7 @@ function initView() {
   $('.lds-facebook').hide();
   $('#inputAccount').val('');
   $('#inputPassword').val('');
-  
+
   // start to use LIFF's api
   if (!liff.isLoggedIn() && !liff.isInClient()) {
     liff.login();
