@@ -55,11 +55,16 @@ app.post('/setting', bodyParser.urlencoded({ extended: true }), (req, res) => {
     res.status(500).send('password is empty.');
     return;
   }
-  userMaps[req.body.userId] = {
-    account: req.body.account, 
-    password: req.body.password
-  }
-  res.sendStatus(200);
+
+  signin.login(req.body.account, req.body.password).then(() => {
+    userMaps[req.body.userId] = {
+      account: req.body.account, 
+      password: req.body.password
+    }
+    res.sendStatus(200);
+  }).catch(() => {
+    res.sendStatus(500);
+  });
 });
 
 app.get('/setting', (req, res) => {
