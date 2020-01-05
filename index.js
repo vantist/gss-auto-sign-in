@@ -43,6 +43,7 @@ app.get('/ping', (req, res) => {
 });
 
 app.post('/setting', bodyParser.urlencoded({ extended: true }), (req, res) => {
+  console.log(req);
   if (!req.body.userId) {
     res.status(500).send('userId is empty.');
     return;
@@ -63,7 +64,7 @@ app.post('/setting', bodyParser.urlencoded({ extended: true }), (req, res) => {
     }
     res.sendStatus(200);
   }).catch(() => {
-    res.sendStatus(500);
+    res.status(500).send('login test failed');
   });
 });
 
