@@ -61,10 +61,10 @@ function getSetting(userId) {
 function setting(userId, account, password) {
   return fetch('../setting', { 
     method: 'POST',
-    body: {
+    body: encodeURI(JSON.stringify({
       userId: userId,
       account: account,
       password: password
-    }
+    }))
   });
 }
