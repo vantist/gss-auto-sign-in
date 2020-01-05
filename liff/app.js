@@ -72,7 +72,7 @@ function setting(userId, account, password) {
     }))
   }).then((res) => {
     if (res.status !== 200) {
-      res.text().then(text => {
+      return res.text().then(text => {
         throw new Error(text);
       });
     }
