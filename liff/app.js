@@ -72,7 +72,9 @@ function setting(userId, account, password) {
     }))
   }).then((res) => {
     if (res.status !== 200) {
-      return Promise.reject(res.text());
+      res.text().then(text => {
+        throw new Error(text);
+      });
     }
   });
 }
