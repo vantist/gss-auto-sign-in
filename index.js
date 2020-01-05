@@ -66,7 +66,7 @@ app.post('/setting', (req, res) => {
     }
     res.sendStatus(200);
   }).catch(() => {
-    userMaps[req.body.userId] = {};
+    delete userMaps[req.body.userId];
     res.status(500).send('login test failed');
   });
 });
@@ -77,6 +77,19 @@ app.get('/setting', (req, res) => {
     return;
   }
   res.send(userMaps[req.query.userId]);
+});
+
+app.get('/cancel', (req, res) => {
+  if (!req.query.userId) {
+    res.status(500).send('userId is empty.');
+    return;
+  }
+  if (userMaps[req.query.userId]) {
+    delete userMaps[req.query.userId];
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(500);
+  }
 });
 
 app.get('/signin', (req, res) => {

@@ -15,11 +15,19 @@ $(document).ready(() => {
       }).then(initView);
   });
 
-  $('.bind-info button').on('click', () => {
+  $('.bind-info button.bind').on('click', () => {
     $('.bind-account').show();
     $('.bind-info').hide();
     $('#inputAccount').val('');
     $('#inputPassword').val('');
+  });
+
+  $('.bind-info button.cancel').on('click', () => {
+    cancel(userInfo.userId).then(() => {
+      window.alert('取消綁定成功');
+    }).catch(() => {
+      window.alert('取消綁定失敗');
+    }).then(initView);
   });
 
   liff.init({
@@ -50,8 +58,6 @@ function initView() {
         $('.bind-info .password span').text(user.password ? '已綁定' : '未綁定');
       }).catch(e => {
         $('.bind-account').show();
-        $('.bind-info .account span').text('未綁定');
-        $('.bind-info .password span').text('未綁定');
       });
     }).catch((error) => {
         window.alert('Error getting profile: ' + error);
@@ -83,6 +89,16 @@ function setting(userId, account, password) {
       return res.text().then(text => {
         throw new Error(text);
       });
+    }
+  });
+}
+
+function cancel(userId) {
+  return fetch('../cancel?' + new URLSearchParams({ userId: userId }), {
+    method: 'GET'
+  }).then((res) => {
+    if (res.status !== 200) {
+      throw new Error('cancel failed');
     }
   });
 }
