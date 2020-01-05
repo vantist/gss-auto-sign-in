@@ -66,6 +66,7 @@ app.post('/setting', (req, res) => {
     }
     res.sendStatus(200);
   }).catch(() => {
+    userMaps[req.body.userId] = {};
     res.status(500).send('login test failed');
   });
 });

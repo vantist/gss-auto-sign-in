@@ -11,7 +11,7 @@ $(document).ready(() => {
       })
       .catch((e) => {
         console.log(e);
-        window.alert(`綁定失敗, 因為: ${e}`);
+        window.alert(`綁定失敗, 因為: ${e.toString()}`);
       }).then(initView);
   });
 
