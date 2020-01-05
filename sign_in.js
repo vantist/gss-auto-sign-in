@@ -102,12 +102,14 @@ let signin = (request, time) => {
 module.exports = {
     signin: (account, password, time) => {
         const request = require('request');
-        let rq = request.defaults({ jar: true, 'proxy': 'http://nas.vantist.tw:3128' });
+        const j = request.jar();
+        let rq = request.defaults({ jar: j, 'proxy': 'http://nas.vantist.tw:3128' });
         return login(rq, account, password).then(signin.bind(null, rq, time));
     },
     login: (account, password) => {
         const request = require('request');
-        let rq = request.defaults({ jar: true, 'proxy': 'http://nas.vantist.tw:3128' });
+        const j = request.jar();
+        let rq = request.defaults({ jar: j, 'proxy': 'http://nas.vantist.tw:3128' });
         return login(rq, account, password);
     }
 }
