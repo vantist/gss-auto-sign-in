@@ -106,15 +106,7 @@ function handleEvent(event) {
     userMaps[userId] = {};
   }
 
-  if (text.indexOf('account:') === 0) {
-    userMaps[userId].account = text.replace('account:', '').trim();
-    let reply = { type: 'text', text: '已設定帳號: ' + userMaps[userId].account };
-    return client.replyMessage(event.replyToken, reply);
-  } else if (text.indexOf('password:') === 0) {
-    userMaps[userId].password = text.replace('password:', '').trim();
-    let reply = { type: 'text', text: '已設定密碼' };
-    return client.replyMessage(event.replyToken, reply);
-  } else if (text === 'testlogin') {
+  if (text === 'testlogin') {
     let user = userMaps[userId];
     if (!user || !user.account) {
       let reply = { type: 'text', text: '未設定帳號' };
@@ -154,12 +146,8 @@ function handleEvent(event) {
       let reply = { type: 'text', text: '打卡失敗: ' + e };
       return client.replyMessage(event.replyToken, reply);
     });
-  } else if (text === 'testcron') {
-    let reply = { type: 'text', text: '開始自動打卡測試' };
-    autoSignIn();
-    return client.replyMessage(event.replyToken, reply);
   } else {
-    let reply = { type: 'text', text: 'help:\n設定帳號 account:xxxx\n設定密碼 password:xxx\n測試帳號連線 testlogin\n立即打卡 signin'};
+    let reply = { type: 'text', text: `help：\n測試帳號連線：testlogin\n立即打卡：signin\n或使用選單功能。`};
     return client.replyMessage(event.replyToken, reply);
   }
 }

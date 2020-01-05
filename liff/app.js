@@ -8,8 +8,8 @@ $(document).ready(() => {
     let password = $('#inputPassword').val().trim();
     setting(userInfo.userId, account, password)
       .then(initView)
-      .catch(() => {
-        window.alert('綁定失敗');
+      .catch((e) => {
+        window.alert(`綁定失敗, 因為: ${e}`);
         initView();
       });
   });
@@ -65,10 +65,14 @@ function setting(userId, account, password) {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
-    body: encodeURI(JSON.stringify({
+    body: JSON.stringify({
       userId: userId,
       account: account,
       password: password
-    }))
+    })
+  }).then((res) => {
+    if (res.status !== 200) {
+      throw(new Error(res.text()));
+    }
   });
 }
