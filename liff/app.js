@@ -51,10 +51,9 @@ function initView() {
 }
 
 function getSetting(userId) {
-  let url = new URL("../setting"),
-      params = { userId: userId };
-  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
-  return fetch(url, { method: 'GET'} ).then((res) => {
+  return fetch('../setting?' + new URLSearchParams({ userId: userId }), {
+    method: 'GET'
+  }).then((res) => {
     return res.json();
   });
 }
