@@ -44,7 +44,6 @@ app.get('/ping', (req, res) => {
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.post('/setting', (req, res) => {
-  console.log(req);
   if (!req.body.userId) {
     res.status(500).send('userId is empty.');
     return;
