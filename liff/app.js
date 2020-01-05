@@ -63,7 +63,6 @@ function setting(userId, account, password) {
   return fetch('../setting', { 
     method: 'POST',
     headers: {
-      'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
