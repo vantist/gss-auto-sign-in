@@ -65,10 +65,12 @@ app.post('/setting', (req, res) => {
       password: req.body.password
     }
     let reply = { type: 'text', text: `${req.body.account} 帳號綁定成功` };
+    client.pushMessage(userId, reply);
     res.sendStatus(200);
   }).catch(() => {
     delete userMaps[req.body.userId];
     let reply = { type: 'text', text: `帳號綁定失敗，${req.body.account} 登入測試發生錯誤` };
+    client.pushMessage(userId, reply);
     res.status(500).send('login test failed');
   });
 });
@@ -92,8 +94,8 @@ app.get('/cancel', (req, res) => {
     client.pushMessage(userId, reply);
     res.sendStatus(200);
   } else {
-    let reply = { type: 'text', text: response };
     let reply = { type: 'text', text: '帳號取消綁定失敗' };
+    client.pushMessage(userId, reply);
     res.sendStatus(500);
   }
 });
