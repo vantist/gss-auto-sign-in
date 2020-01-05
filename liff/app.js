@@ -63,13 +63,13 @@ function setting(userId, account, password) {
   return fetch('../setting', { 
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
     },
-    body: JSON.stringify({
+    body:encodeURI(JSON.stringify({
       userId: userId,
       account: account,
       password: password
-    })
+    }))
   }).then((res) => {
     if (res.status !== 200) {
       return Promise.reject(res.text());

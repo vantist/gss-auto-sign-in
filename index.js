@@ -46,7 +46,6 @@ app.get('/ping', (req, res) => {
 });
 
 app.post('/setting', (req, res) => {
-  console.log(req.body);
   if (!req.body.userId) {
     res.status(500).send('userId is empty.');
     return;
