@@ -1,18 +1,22 @@
 let userInfo = {};
 $(document).ready(() => {
-  $('.bind-account').hide();
-  $('.bind-info').hide();
-
   $('.bind-account button').on('click', () => {
     let account = $('#inputAccount').val().trim();
     let password = $('#inputPassword').val().trim();
+    $('.lds-facebook').show();
     setting(userInfo.userId, account, password)
-      .then(initView)
+      .then(() => {
+        window.alert('帳號綁定成功');
+      })
       .catch((e) => {
         console.log(e);
         window.alert(`綁定失敗, 因為: ${e}`);
-        initView();
-      });
+      }).then(initView);
+  });
+
+  $('.bind-info button').on('click', () => {
+    $('.bind-account').show();
+    $('.bind-info').hide();
   });
 
   liff.init({
@@ -26,6 +30,7 @@ $(document).ready(() => {
 function initView() {
   $('.bind-account').hide();
   $('.bind-info').hide();
+  $('.lds-facebook').hide();
   // start to use LIFF's api
   if (!liff.isLoggedIn() && !liff.isInClient()) {
     liff.login();
