@@ -95,8 +95,12 @@ function setting(userId, account, password) {
 }
 
 function cancel(userId) {
-  return fetch('../cancel?' + new URLSearchParams({ userId: userId }), {
-    method: 'GET'
+  return fetch('../cancel', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8'
+    },
+    body: JSON.stringify({ userId: userId })
   }).then((res) => {
     if (res.status !== 200) {
       throw new Error('cancel failed');
