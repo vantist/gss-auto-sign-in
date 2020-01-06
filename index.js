@@ -234,7 +234,7 @@ let getRandom = (min, max) => {
   return Math.floor(Math.random()*max)+min;
 };
 
-let autoSignIn = (isMorning) => {
+let autoSignIn = (isMorning, isOffWork) => {
   Object.keys(userMaps).forEach(userId => {
     let offset = getRandom(0, 20) * 60 * 1000;
     console.log(`enqeeue auto Sign In for ${userId} , wait ${offset} ms`);
@@ -247,6 +247,14 @@ let autoSignIn = (isMorning) => {
       let time = `${hour}${minute}`;
 
       if (!(user && user.account && user.password)) {
+        return;
+      }
+
+      if (user.workMorning && isMorning && isOffWork) {
+        return;
+      }
+
+      if (user.workAfternoon && !isMorning && !isOffWork) {
         return;
       }
 
@@ -282,22 +290,22 @@ app.listen(port, () => {
 
 cron.schedule(config.goWorkMorningCron, () => {
   console.log('執行早上自動上班打卡');
-  autoSignIn(true);
+  autoSignIn(true, false);
 });
 
 cron.schedule(config.offWorkMorningCron, () => {
   console.log('執行早上自動下班打卡');
-  autoSignIn(true);
+  autoSignIn(true, true);
 });
 
 cron.schedule(config.goWorkAfternoonCron, () => {
   console.log('執行下午自動上班打卡');
-  autoSignIn(false);
+  autoSignIn(false, false);
 });
 
 cron.schedule(config.offWorkAfternoonCron, () => {
   console.log('執行下午自動下班打卡');
-  autoSignIn(false);
+  autoSignIn(false, true);
 });
 
 cron.schedule(config.resetWorkStateCron, () => {
