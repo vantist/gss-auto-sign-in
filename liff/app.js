@@ -47,7 +47,7 @@ $(document).ready(() => {
 function initView() {
   $('.bind-account').hide();
   $('.bind-info').hide();
-  $('.lds-facebook').hide();
+  $('.lds-facebook').show();
   $('#inputAccount').val('');
   $('#inputPassword').val('');
 
@@ -83,6 +83,8 @@ function initView() {
       });
     }).catch((error) => {
         window.alert('Error getting profile: ' + error);
+    }).then(() => {
+      $('.lds-facebook').hide();
     });
   }
 }
