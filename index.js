@@ -95,7 +95,7 @@ app.get('/setting', (req, res) => {
   res.send(userMaps[req.query.userId]);
 });
 
-app.post('/cancel', (req, res) => {
+app.post('/cancel', bodyParser.json(), (req, res) => {
   if (!req.body.userId) {
     res.status(500).send('userId is empty.');
     return;
@@ -112,7 +112,7 @@ app.post('/cancel', (req, res) => {
   }
 });
 
-app.post('/reset', (req, res) => {
+app.post('/reset', bodyParser.json(), (req, res) => {
   if (!req.body.userId) {
     res.status(500).send('userId is empty.');
     return;
