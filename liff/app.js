@@ -66,7 +66,7 @@ function initView() {
         $('.bind-info .account span').text(user.account ? user.account : '未綁定');
         $('.bind-info .password span').text(user.password ? '已綁定' : '未綁定');
         let workStatus;
-        if (user.account || user.password) {
+        if (!user.account || !user.password) {
           workStatus = '未知';
         } else if (user.workMorning && user.workAfternoon) {
           workStatus = '未請假';
