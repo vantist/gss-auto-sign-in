@@ -112,6 +112,24 @@ app.post('/cancel', (req, res) => {
   }
 });
 
+app.post('/reset', (req, res) => {
+  if (!req.body.userId) {
+    res.status(500).send('userId is empty.');
+    return;
+  }
+  if (userMaps[req.body.userId]) {
+    userMaps[req.body.userId].workMorning = true;
+    userMaps[req.body.userId].workAfternoon = true;
+    let reply = { type: 'text', text: '重置請假狀態成功' };
+    client.pushMessage(req.body.userId, reply);
+    res.sendStatus(200);
+  } else {
+    let reply = { type: 'text', text: '重置請假狀態失敗' };
+    client.pushMessage(req.body.userId, reply);
+    res.sendStatus(500);
+  }
+});
+
 app.get('/signin', (req, res) => {
   if (!req.query.userId) {
     res.status(500).send('userId is empty.');

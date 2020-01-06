@@ -28,6 +28,14 @@ $(document).ready(() => {
     }).then(initView);
   });
 
+  $('.bind-info button.reset').on('click', () => {
+    reset(userInfo.userId).then(() => {
+      window.alert('重置請假狀態成功');
+    }).catch(() => {
+      window.alert('重置請假狀態失敗');
+    }).then(initView);
+  });
+
   liff.init({
     liffId: '1653725533-Wg9REdXE'
   }).then(initView)
@@ -57,6 +65,17 @@ function initView() {
         $('.bind-info').show();
         $('.bind-info .account span').text(user.account ? user.account : '未綁定');
         $('.bind-info .password span').text(user.password ? '已綁定' : '未綁定');
+        let workStatus;
+        if (user.workMorning && user.workAfternoon) {
+          workStatus = '未請假';
+        } else if (user.workMorning && !user.workAfternoon) {
+          workStatus = '請下午';
+        } else if (!user.workMorning && user.workAfternoon) {
+          workStatus = '請早上';
+        } else {
+          workStatus = '請整天';
+        }
+        $('.bind-info .take-leave').text(workStatus);
       }).catch(e => {
         $('.bind-account').show();
       });
@@ -104,6 +123,20 @@ function cancel(userId) {
   }).then((res) => {
     if (res.status !== 200) {
       throw new Error('cancel failed');
+    }
+  });
+}
+
+function reset(userId) {
+  return fetch('../reset', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8'
+    },
+    body: JSON.stringify({ userId: userId })
+  }).then((res) => {
+    if (res.status !== 200) {
+      throw new Error('reset failed');
     }
   });
 }
