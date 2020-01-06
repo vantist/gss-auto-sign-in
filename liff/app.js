@@ -62,13 +62,15 @@ function initView() {
       $('.bind-info img')[0].src = profile.pictureUrl;
   
       getSetting(userInfo.userId).then((user) => {
+        if (!user.account || !user.password) {
+          $('.bind-account').show();
+          return;
+        }
         $('.bind-info').show();
         $('.bind-info .account span').text(user.account ? user.account : '未綁定');
         $('.bind-info .password span').text(user.password ? '已綁定' : '未綁定');
         let workStatus;
-        if (!user.account || !user.password) {
-          workStatus = '未知';
-        } else if (user.workMorning && user.workAfternoon) {
+        if (user.workMorning && user.workAfternoon) {
           workStatus = '未請假';
         } else if (user.workMorning && !user.workAfternoon) {
           workStatus = '請下午';
