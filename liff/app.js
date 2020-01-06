@@ -66,7 +66,9 @@ function initView() {
         $('.bind-info .account span').text(user.account ? user.account : '未綁定');
         $('.bind-info .password span').text(user.password ? '已綁定' : '未綁定');
         let workStatus;
-        if (user.workMorning && user.workAfternoon) {
+        if (user.account || user.password) {
+          workStatus = '未知';
+        } else if (user.workMorning && user.workAfternoon) {
           workStatus = '未請假';
         } else if (user.workMorning && !user.workAfternoon) {
           workStatus = '請下午';
@@ -75,7 +77,7 @@ function initView() {
         } else {
           workStatus = '請整天';
         }
-        $('.bind-info .take-leave').text(workStatus);
+        $('.bind-info .take-leave span').text(workStatus);
       }).catch(e => {
         $('.bind-account').show();
       });
