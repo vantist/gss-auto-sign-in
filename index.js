@@ -83,15 +83,16 @@ app.post('/setting', bodyParser.json(), (req, res) => {
   }
 
   signin.login(req.body.account, req.body.password)
-    .then(saveUser.bind(null, req.body.userId), {
+    .then(saveUser.bind(null, req.body.userId, {
       account: req.body.account, 
       password: req.body.password,
       workMorning: true,
       workAfternoon: true
-    }).then(() => ({ status: 200, message: `${req.body.account} 帳號綁定成功` }))
+    })).then({ status: 200, message: `${req.body.account} 帳號綁定成功` })
     .catch(() => {
       return deleteUser(req.body.userId)
         .then({ status: 500, message: `帳號綁定失敗，${req.body.account} 登入測試發生錯誤` })
+        .catch(e => ({ status: 500, message: `帳號綁定失敗，${req.body.account} 登入測試發生錯誤` }));
     }).then(data => {
       if (!config.enablePushMessages) return;
       let reply = { type: 'text', text: data.message };
