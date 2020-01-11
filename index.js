@@ -116,7 +116,7 @@ app.post('/cancel', bodyParser.json(), (req, res) => {
     res.status(500).send('userId is empty.');
     return;
   }
-  deleteUser(userInfo.userId)
+  deleteUser(req.body.userId)
     .then(() => ({ status: 200, message: '帳號取消綁定成功'}))
     .catch(() => ({ status: 500, message: '帳號取消綁定失敗'}))
     .then(data => {
