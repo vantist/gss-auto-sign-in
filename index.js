@@ -6,6 +6,8 @@ const cron = require('node-cron');
 const signin = require('./sign_in.js');
 const request = require('request');
 const bodyParser = require('body-parser');
+const firebase = require("firebase/app");
+require('firebase/database');
 
 // create LINE SDK config from env variables
 const config = {
@@ -17,6 +19,13 @@ const config = {
   goWorkAfternoonCron: process.env.GO_WORK_AFTERNOON_CRON || '0 30 12 * * 1-5',
   offWorkAfternoonCron: process.env.OFF_WORK_AFTERNOON_CRON || '0 0 18 * * 1-5',
   resetWorkStateCron: process.env.RESET_WORK_STATE_CRON || '0 0 0 * * 1-5',
+  firebase: {
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: `${process.env.FIREBASE_PROJECT_ID}.firebaseapp.com`,
+    databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`,
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    storageBucket: `${process.env.FIREBASE_PROJECT_ID}.appspot.com`,
+  },
 };
 
 /**
@@ -27,7 +36,10 @@ const config = {
  *   workAfternoon: Boolean
  * }
  */
-let userMaps = {};
+
+firebase.initializeApp(config.firebase);
+// Get a reference to the database service
+const database = firebase.database();
 
 // create LINE SDK client
 const client = new line.Client(config);
@@ -69,22 +81,21 @@ app.post('/setting', bodyParser.json(), (req, res) => {
     return;
   }
 
-  signin.login(req.body.account, req.body.password).then(() => {
-    userMaps[req.body.userId] = {
+  signin.login(req.body.account, req.body.password)
+    .then(saveUser.bind(null, req.body.userId), {
       account: req.body.account, 
       password: req.body.password,
       workMorning: true,
       workAfternoon: true
-    }
-    let reply = { type: 'text', text: `${req.body.account} 帳號綁定成功` };
-    client.pushMessage(req.body.userId, reply);
-    res.sendStatus(200);
-  }).catch(() => {
-    delete userMaps[req.body.userId];
-    let reply = { type: 'text', text: `帳號綁定失敗，${req.body.account} 登入測試發生錯誤` };
-    client.pushMessage(req.body.userId, reply);
-    res.status(500).send('login test failed');
-  });
+    }).then(() => ({ status: 200, message: `${req.body.account} 帳號綁定成功` }))
+    .catch(() => {
+      return deleteUser(req.body.userId)
+        .then({ status: 500, message: `帳號綁定失敗，${req.body.account} 登入測試發生錯誤` })
+    }).then(data => {
+      let reply = { type: 'text', text: data.message };
+      client.pushMessage(req.body.userId, reply);
+      res.status(data.status).send(data.message);
+    });
 });
 
 app.get('/setting', (req, res) => {
@@ -92,7 +103,9 @@ app.get('/setting', (req, res) => {
     res.status(500).send('userId is empty.');
     return;
   }
-  res.send(userMaps[req.query.userId]);
+  readUser(req.query.userId)
+    .then(res.send)
+    .catch((e) => res.status(500).send(e));
 });
 
 app.post('/cancel', bodyParser.json(), (req, res) => {
@@ -100,16 +113,14 @@ app.post('/cancel', bodyParser.json(), (req, res) => {
     res.status(500).send('userId is empty.');
     return;
   }
-  if (userMaps[req.body.userId]) {
-    delete userMaps[req.body.userId];
-    let reply = { type: 'text', text: '帳號取消綁定成功' };
-    client.pushMessage(req.body.userId, reply);
-    res.sendStatus(200);
-  } else {
-    let reply = { type: 'text', text: '帳號取消綁定失敗' };
-    client.pushMessage(req.body.userId, reply);
-    res.sendStatus(500);
-  }
+  deleteUser(userInfo.userId)
+    .then(() => ({ status: 200, message: '帳號取消綁定成功'}))
+    .catch(() => ({ status: 500, message: '帳號取消綁定失敗'}))
+    .then(data => {
+      let reply = { type: 'text', text: data.message };
+      client.pushMessage(req.body.userId, reply);
+      res.sendStatus(data.status);
+    });
 });
 
 app.post('/reset', bodyParser.json(), (req, res) => {
@@ -117,17 +128,18 @@ app.post('/reset', bodyParser.json(), (req, res) => {
     res.status(500).send('userId is empty.');
     return;
   }
-  if (userMaps[req.body.userId]) {
-    userMaps[req.body.userId].workMorning = true;
-    userMaps[req.body.userId].workAfternoon = true;
-    let reply = { type: 'text', text: '重置請假狀態成功' };
+  readUser(req.body.userId).then((user) => {
+    user.workMorning = true;
+    user.workAfternoon = true;
+    return user;
+  }).then((user) => saveUser(user.userId, user))
+  .then(() => ({ status: 200, message: '重置請假狀態成功'}))
+  .catch(() => ({ status: 500, message: '重置請假狀態失敗'}))
+  .then(data => {
+    let reply = { type: 'text', text: data.message };
     client.pushMessage(req.body.userId, reply);
-    res.sendStatus(200);
-  } else {
-    let reply = { type: 'text', text: '重置請假狀態失敗' };
-    client.pushMessage(req.body.userId, reply);
-    res.sendStatus(500);
-  }
+    res.sendStatus(data.status);
+  });
 });
 
 app.get('/signin', (req, res) => {
@@ -139,10 +151,9 @@ app.get('/signin', (req, res) => {
     res.status(500).send('time is empty.');
     return;
   }
-  let user = userMaps[req.query.userId];
-  signin.signin(user.account, user.password, req.query.time).then(response => {
-    res.send(response);
-  }).catch(e => {
+  readUser(req.body.userId).then((user) => {
+    return signin.signin(user.account, user.password, req.query.time);
+  }).then(res.send).catch(e => {
     res.status(500).send(e);
   });
 });
@@ -157,130 +168,159 @@ function handleEvent(event) {
   let userId = event.source.userId;
   let text = event.message.text;
 
-  if (!userMaps[userId]) {
-    userMaps[userId] = {};
-  }
-
   if (text === '登入測試') {
-    let user = userMaps[userId];
-    if (!checkAccountPassword(userId, event.replyToken)) return;
-
-    signin.login(user.account, user.password).then(() => {
-      let reply = { type: 'text', text: '登入成功' };
-      return client.replyMessage(event.replyToken, reply);
-    }).catch(e => {
-      let reply = { type: 'text', text: '登入失敗: ' + e };
-      return client.replyMessage(event.replyToken, reply);
-    });
+    return checkAccountPassword(userId)
+      .then(readUser.bind(null, userId))
+      .then(user => signin.login(user.account, user.password))
+      .then(() => '登入成功')
+      .catch(e => '登入失敗: ' + e)
+      .then(message => {
+        let reply = { type: 'text', text: message };
+        return client.replyMessage(event.replyToken, reply);
+      });
   } else if (text === '打卡') {
-    let user = userMaps[userId];
-    if (!checkAccountPassword(userId, event.replyToken)) return;
-
-    let date = new Date();
-    date.setTime(date.getTime() - 60000);
-    let hour = `${date.getHours()}`.padStart(2, '0');
-    let minute = `${date.getMinutes()}`.padStart(2, '0');
-    let time = `${hour}${minute}`;
-
-    signin.signin(user.account, user.password, time).then(response => {
-      let reply = { type: 'text', text: response };
-      return client.replyMessage(event.replyToken, reply);
-    }).catch(e => {
-      let reply = { type: 'text', text: '打卡失敗: ' + e };
-      return client.replyMessage(event.replyToken, reply);
-    });
+    return checkAccountPassword(userId)
+      .then(readUser.bind(null, userId))
+      .then(user => signin.signin(user.account, user.password, getTime()))
+      .catch(e => '打卡失敗: ' + e)
+      .then(message => {
+        let reply = { type: 'text', text: message };
+        return client.replyMessage(event.replyToken, reply);
+      });
   } else if (text === '請整天') {
-    let user = userMaps[userId];
-    if (!checkAccountPassword(userId, event.replyToken)) return;
-    user.workMorning = false;
-    user.workAfternoon = false;
-    let reply = { type: 'text', text: '已標記請整天，今天將不自動打卡' };
-    return client.replyMessage(event.replyToken, reply);
+    return checkAccountPassword(userId)
+      .then(takeLeave.bind(null, userId, false, false))
+      .then(() => '已標記請整天，今天將不自動打卡')
+      .catch(e => '標記請整天失敗: ' + e)
+      .then(message => {
+        let reply = { type: 'text', text: message };
+        return client.replyMessage(event.replyToken, reply);
+      });
   } else if (text === '請早上') {
-    let user = userMaps[userId];
-    if (!checkAccountPassword(userId, event.replyToken)) return;
-    user.workMorning = false;
-    user.workAfternoon = true;
-    let reply = { type: 'text', text: '已標記請早上，今天早上將不自動打卡' };
-    return client.replyMessage(event.replyToken, reply);
+    return checkAccountPassword(userId)
+      .then(takeLeave.bind(null, userId, false, true))
+      .then(() => '已標記請早上，今天早上將不自動打卡')
+      .catch(e => '標記請早上失敗: ' + e)
+      .then(message => {
+        let reply = { type: 'text', text: message };
+        return client.replyMessage(event.replyToken, reply);
+      });
   } else if (text === '請下午') {
-    let user = userMaps[userId];
-    if (!checkAccountPassword(userId, event.replyToken)) return;
-    user.workMorning = true;
-    user.workAfternoon = false;
-    let reply = { type: 'text', text: '已標記請下午，今天下午將不自動打卡' };
-    return client.replyMessage(event.replyToken, reply);
+    return checkAccountPassword(userId)
+      .then(takeLeave.bind(null, userId, true, false))
+      .then(() => '已標記請下午，今天下午將不自動打卡')
+      .catch(e => '標記請下午失敗: ' + e)
+      .then(message => {
+        let reply = { type: 'text', text: message };
+        return client.replyMessage(event.replyToken, reply);
+      });
   } else {
-    let reply = { type: 'text', text: `help：\n測試帳號連線：測試登入\n立即打卡：打卡\n或使用選單功能。`};
-    return client.replyMessage(event.replyToken, reply);
+    return readHelp()
+      .catch(() => `help：\n測試帳號連線：登入測試\n立即打卡：打卡\n或使用選單功能。`)
+      .then(message => {
+        let reply = { type: 'text', text: message };
+        return client.replyMessage(event.replyToken, reply);
+      });
   }
 }
 
-let checkAccountPassword = (userId, replyToken) => {
-  let user = userMaps[userId];
-  if (!user || !user.account) {
-    let reply = { type: 'text', text: '未設定帳號' };
-    client.replyMessage(replyToken, reply);
-    return false;
-  } else if (!user || !user.password) {
-    let reply = { type: 'text', text: '未設定密碼' };
-    client.replyMessage(replyToken, reply);
-    return false;
-  }
-  return true;
-};
+function checkAccountPassword(userId) {
+  return readUser(userId).then(user => {
+    if (!user || !user.account) {
+      throw new Error('未設定帳號');
+    } else if (!user || !user.password) {
+      throw new Error('未設定密碼');
+    }
+  });
+}
 
-let getRandom = (min, max) => {
+function takeLeave(userId, morning, afternoon) {
+  return readUser(userId).then((user) => {
+    user.workMorning = morning;
+    user.workAfternoon = afternoon;
+    return user;
+  }).then(saveUser.bind(null, userId));
+}
+
+function getRandom(min, max) {
   return Math.floor(Math.random()*max)+min;
-};
+}
 
-let autoSignIn = (isMorning, isOffWork) => {
-  Object.keys(userMaps).forEach(userId => {
-    let offset = getRandom(0, 20) * 60 * 1000;
+function getTime() {
+  let date = new Date();
+  date.setTime(date.getTime() - 15000);
+  let hour = `${date.getHours()}`.padStart(2, '0');
+  let minute = `${date.getMinutes()}`.padStart(2, '0');
+  let time = `${hour}${minute}`;
+  return time;
+}
+
+function autoSignIn(isMorning, isOffWork) {
+  readUsers()
+    .then(Object.keys)
+    .then(userId => {
+      let offset = getRandom(0, 20) * 60 * 1000;
     console.log(`enqeeue auto Sign In for ${userId} , wait ${offset} ms`);
+
     setTimeout(function(userId) {
-      let user = userMaps[userId];
-      let date = new Date();
-      date.setTime(date.getTime() - 60000);
-      let hour = `${date.getHours()}`.padStart(2, '0');
-      let minute = `${date.getMinutes()}`.padStart(2, '0');
-      let time = `${hour}${minute}`;
+      readUser(userId).then(user => {
+        let time = getTime();
 
-      if (!(user && user.account && user.password)) {
-        return;
-      }
-
-      if (user.workMorning && isMorning && isOffWork) {
-        return;
-      }
-
-      if (user.workAfternoon && !isMorning && !isOffWork) {
-        return;
-      }
-
-      if (!user.workMorning && isMorning) {
-        let reply = { type: 'text', text: '早上已標記請假，不自動打卡' };
-        client.pushMessage(userId, reply);
-        return;
-      }
-
-      if (!user.workAfternoon && !isMorning) {
-        let reply = { type: 'text', text: '下午已標記請假，不自動打卡' };
-        client.pushMessage(userId, reply);
-        return;
-      }
-
-      console.log(`auto Sign In for ${user.account}`);
-      signin.signin(user.account, user.password, time).then(response => {
-        let reply = { type: 'text', text: response };
-        client.pushMessage(userId, reply);
-      }).catch(e => {
-        let reply = { type: 'text', text: '打卡失敗: ' + e };
-        client.pushMessage(userId, reply);
+        if (!(user && user.account && user.password)) {
+          return;
+        }
+  
+        if (user.workMorning && isMorning && isOffWork) {
+          return;
+        }
+  
+        if (user.workAfternoon && !isMorning && !isOffWork) {
+          return;
+        }
+  
+        if (!user.workMorning && isMorning) {
+          let reply = { type: 'text', text: '早上已標記請假，不自動打卡' };
+          client.pushMessage(userId, reply);
+          return;
+        }
+  
+        if (!user.workAfternoon && !isMorning) {
+          let reply = { type: 'text', text: '下午已標記請假，不自動打卡' };
+          client.pushMessage(userId, reply);
+          return;
+        }
+  
+        console.log(`auto Sign In for ${user.account}`);
+        signin.signin(user.account, user.password, time)
+        .catch(e => '打卡失敗: ' + e)
+        .then(message => {
+          let reply = { type: 'text', text: message };
+          return client.pushMessage(userId, reply);
+        });
       });
     }.bind(null, userId), offset);
-  });
-};
+    });
+}
+
+function readHelp() {
+  return firebase.database().ref('/help').once('value').then(snapshot => snapshot.val());
+}
+
+function readUser(userId) {
+  return firebase.database().ref('/users/' + userId).once('value').then(snapshot => snapshot.val());
+}
+
+function readUsers() {
+  return firebase.database().ref('/users').once('value').then(snapshot => snapshot.val());
+}
+
+function saveUser(userId, user) {
+  return database.ref('users/' + userId).set(user);
+}
+
+function deleteUser(userId) {
+  return saveUser(userId, null);
+}
 
 // listen on port
 const port = process.env.PORT || 8080;
@@ -310,12 +350,12 @@ cron.schedule(config.offWorkAfternoonCron, () => {
 
 cron.schedule(config.resetWorkStateCron, () => {
   console.log('重置請假狀態');
-  Object.keys(userMaps).forEach(userId => {
-    let user = userMaps[userId];
-    console.log(`重置 ${user.account} 的請假狀態`);
-    user.workMorning = true;
-    user.workAfternoon = true;
-  });
+  readUsers()
+    .then(Object.keys)
+    .then(userId => takeLeave(userId, true, true))
+    .then(() => {
+      console.log(`重置 ${userId} 的請假狀態`);
+    });
 });
 
 cron.schedule('0 */10 * * * *', () => {
