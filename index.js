@@ -107,7 +107,7 @@ app.get('/setting', (req, res) => {
     return;
   }
   readUser(req.query.userId)
-    .then(res.send)
+    .then(user => res.send(user))
     .catch((e) => res.status(500).send(e));
 });
 
@@ -158,7 +158,7 @@ app.get('/signin', (req, res) => {
   }
   readUser(req.body.userId).then((user) => {
     return signin.signin(user.account, user.password, req.query.time);
-  }).then(res.send).catch(e => {
+  }).then(message => { res.send(message); }).catch(e => {
     res.status(500).send(e);
   });
 });
@@ -317,7 +317,7 @@ function readHelp() {
 }
 
 function readUser(userId) {
-  return firebase.database().ref('/users/' + userId).once('value')
+  return firebase.database().ref(`/users/${userId}`).once('value')
     .then(snapshot => snapshot.val())
     .then(user => {
       if (!user) throw new Error('User not exist');
