@@ -88,10 +88,10 @@ app.post('/setting', bodyParser.json(), (req, res) => {
       password: req.body.password,
       workMorning: true,
       workAfternoon: true
-    })).then({ status: 200, message: `${req.body.account} 帳號綁定成功` })
+    })).then(() => ({ status: 200, message: `${req.body.account} 帳號綁定成功` }))
     .catch(() => {
       return deleteUser(req.body.userId)
-        .then({ status: 500, message: `帳號綁定失敗，${req.body.account} 登入測試發生錯誤` })
+        .then(() => ({ status: 500, message: `帳號綁定失敗，${req.body.account} 登入測試發生錯誤` }))
         .catch(e => ({ status: 500, message: `帳號綁定失敗，${req.body.account} 登入測試發生錯誤` }));
     }).then(data => {
       if (!config.enablePushMessages) return;
