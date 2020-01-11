@@ -11,6 +11,7 @@ require('firebase/database');
 
 // create LINE SDK config from env variables
 const config = {
+  enablePushMessages: !!process.env.ENABLE_PUSH_MESSAGES,
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
   channelSecret: process.env.CHANNEL_SECRET,
   pingServer: process.env.PING_TARGET_SERVER,
@@ -92,6 +93,7 @@ app.post('/setting', bodyParser.json(), (req, res) => {
       return deleteUser(req.body.userId)
         .then({ status: 500, message: `帳號綁定失敗，${req.body.account} 登入測試發生錯誤` })
     }).then(data => {
+      if (!config.enablePushMessages) return;
       let reply = { type: 'text', text: data.message };
       client.pushMessage(req.body.userId, reply);
       res.status(data.status).send(data.message);
@@ -117,6 +119,7 @@ app.post('/cancel', bodyParser.json(), (req, res) => {
     .then(() => ({ status: 200, message: '帳號取消綁定成功'}))
     .catch(() => ({ status: 500, message: '帳號取消綁定失敗'}))
     .then(data => {
+      if (!config.enablePushMessages) return;
       let reply = { type: 'text', text: data.message };
       client.pushMessage(req.body.userId, reply);
       res.sendStatus(data.status);
@@ -136,6 +139,7 @@ app.post('/reset', bodyParser.json(), (req, res) => {
   .then(() => ({ status: 200, message: '重置請假狀態成功'}))
   .catch(() => ({ status: 500, message: '重置請假狀態失敗'}))
   .then(data => {
+    if (!config.enablePushMessages) return;
     let reply = { type: 'text', text: data.message };
     client.pushMessage(req.body.userId, reply);
     res.sendStatus(data.status);
@@ -257,61 +261,77 @@ function getTime() {
 
 function autoSignIn(isMorning, isOffWork) {
   readUsers()
-    .then(Object.keys)
-    .then(userId => {
-      let offset = getRandom(0, 20) * 60 * 1000;
-    console.log(`enqeeue auto Sign In for ${userId} , wait ${offset} ms`);
+    .then(users => {
+      users.forEach(user => {
+        let offset = getRandom(0, 20) * 60 * 1000;
+        console.log(`enqeeue auto Sign In for ${user.userId} , wait ${offset} ms`);
 
-    setTimeout(function(userId) {
-      readUser(userId).then(user => {
-        let time = getTime();
-
-        if (!(user && user.account && user.password)) {
-          return;
-        }
-  
-        if (user.workMorning && isMorning && isOffWork) {
-          return;
-        }
-  
-        if (user.workAfternoon && !isMorning && !isOffWork) {
-          return;
-        }
-  
-        if (!user.workMorning && isMorning) {
-          let reply = { type: 'text', text: '早上已標記請假，不自動打卡' };
-          client.pushMessage(userId, reply);
-          return;
-        }
-  
-        if (!user.workAfternoon && !isMorning) {
-          let reply = { type: 'text', text: '下午已標記請假，不自動打卡' };
-          client.pushMessage(userId, reply);
-          return;
-        }
-  
-        console.log(`auto Sign In for ${user.account}`);
-        signin.signin(user.account, user.password, time)
-        .catch(e => '打卡失敗: ' + e)
-        .then(message => {
-          let reply = { type: 'text', text: message };
-          return client.pushMessage(userId, reply);
-        });
+        setTimeout(function(user) {
+          if (!(user.account && user.password)) {
+            return;
+          }
+    
+          if (user.workMorning && isMorning && isOffWork) {
+            return;
+          }
+    
+          if (user.workAfternoon && !isMorning && !isOffWork) {
+            return;
+          }
+    
+          if (!user.workMorning && isMorning) {
+            if (!config.enablePushMessages) return;
+            let reply = { type: 'text', text: '早上已標記請假，不自動打卡' };
+            client.pushMessage(user.userId, reply);
+            return;
+          }
+    
+          if (!user.workAfternoon && !isMorning) {
+            if (!config.enablePushMessages) return;
+            let reply = { type: 'text', text: '下午已標記請假，不自動打卡' };
+            client.pushMessage(user.userId, reply);
+            return;
+          }
+    
+          console.log(`auto Sign In for ${user.account}`);
+          signin.signin(user.account, user.password, getTime())
+          .catch(e => '打卡失敗: ' + e)
+          .then(message => {
+            if (!config.enablePushMessages) return;
+            let reply = { type: 'text', text: message };
+            return client.pushMessage(userId, reply);
+          });
+        }.bind(null, user), offset);
       });
-    }.bind(null, userId), offset);
     });
 }
 
 function readHelp() {
-  return firebase.database().ref('/help').once('value').then(snapshot => snapshot.val());
+  return firebase.database().ref('/help').once('value')
+    .then(snapshot => snapshot.val())
+    .then(help => {
+      if (!help) throw new Error('Help not found');
+      return help;
+    });
 }
 
 function readUser(userId) {
-  return firebase.database().ref('/users/' + userId).once('value').then(snapshot => snapshot.val());
+  return firebase.database().ref('/users/' + userId).once('value')
+    .then(snapshot => snapshot.val())
+    .then(user => {
+      if (!user) throw new Error('User not exist');
+      return user;
+    });
 }
 
 function readUsers() {
-  return firebase.database().ref('/users').once('value').then(snapshot => snapshot.val());
+  return firebase.database().ref('/users').once('value')
+    .then(snapshot => snapshot.val())
+    .then(users => {
+      return Object.keys(users)
+        .filter(userId => users[userId])
+        .map(userId => ({ userId, ...users[userId] }));
+    })
 }
 
 function saveUser(userId, user) {
@@ -351,10 +371,14 @@ cron.schedule(config.offWorkAfternoonCron, () => {
 cron.schedule(config.resetWorkStateCron, () => {
   console.log('重置請假狀態');
   readUsers()
-    .then(Object.keys)
-    .then(userId => takeLeave(userId, true, true))
+    .then(users => {
+      return users.forEach(user => takeLeave(user.userId, true, true))
+        .catch(e => {
+          console.log(`重置 ${user.userId} 請假狀態失敗: ${e}`);
+        });
+    })
     .then(() => {
-      console.log(`重置 ${userId} 的請假狀態`);
+      console.log(`重置請假狀態完成`);
     });
 });
 
