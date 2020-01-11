@@ -132,11 +132,7 @@ app.post('/reset', bodyParser.json(), (req, res) => {
     res.status(500).send('userId is empty.');
     return;
   }
-  readUser(req.body.userId).then((user) => {
-    user.workMorning = true;
-    user.workAfternoon = true;
-    return user;
-  }).then((user) => saveUser(user.userId, user))
+  takeLeave(userInfo.userId, true, true)
   .then(() => ({ status: 200, message: '重置請假狀態成功'}))
   .catch(() => ({ status: 500, message: '重置請假狀態失敗'}))
   .then(data => {
