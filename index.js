@@ -132,7 +132,7 @@ app.post('/reset', bodyParser.json(), (req, res) => {
     res.status(500).send('userId is empty.');
     return;
   }
-  takeLeave(userInfo.userId, true, true)
+  takeLeave(req.body.userId, true, true)
   .then(() => ({ status: 200, message: '重置請假狀態成功'}))
   .catch(() => ({ status: 500, message: '重置請假狀態失敗'}))
   .then(data => {
