@@ -369,10 +369,10 @@ function readUsers() {
 function resetWorkState() {
   readUsers()
     .then(users => {
-      return users.forEach(user => takeLeave(user.userId, true, true))
+      return Promise.all(users.map(user => takeLeave(user.userId, true, true))
         .catch(e => {
           console.log(`重置 ${user.userId} 請假狀態失敗: ${e}`);
-        });
+        }));
     })
     .then(() => {
       console.log(`重置請假狀態完成`);
