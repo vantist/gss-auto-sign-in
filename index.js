@@ -68,6 +68,41 @@ app.get('/ping', (req, res) => {
   res.send('done');
 });
 
+app.get('/action', (req, res) => {
+  let type = req.query.type;
+
+  switch (type) {
+    case 'goWorkMorning':
+      console.log('執行早上自動上班打卡');
+      autoSignIn(true, false);
+      res.sendStatus(200);
+      break;
+    case 'goWorkAfternoon':
+      console.log('執行下午自動上班打卡');
+      autoSignIn(false, false);
+      res.sendStatus(200);
+      break;
+    case 'offWorkMorning':
+      console.log('執行早上自動下班打卡');
+      autoSignIn(true, true);
+      res.sendStatus(200);
+      break;
+    case 'offWorkAfternoon':
+      console.log('執行下午自動下班打卡');
+      autoSignIn(false, true);
+      res.sendStatus(200);
+      break;
+    case 'resetWorkState':
+      console.log('重置請假狀態');
+      resetWorkState();
+      res.sendStatus(200);
+      break;
+    default: 
+      res.status(500);
+      break;
+  }
+});
+
 app.post('/setting', bodyParser.json(), (req, res) => {
   if (!req.body.userId) {
     res.status(500).send('userId is empty.');
@@ -331,6 +366,19 @@ function readUsers() {
     })
 }
 
+function resetWorkState() {
+  readUsers()
+    .then(users => {
+      return users.forEach(user => takeLeave(user.userId, true, true))
+        .catch(e => {
+          console.log(`重置 ${user.userId} 請假狀態失敗: ${e}`);
+        });
+    })
+    .then(() => {
+      console.log(`重置請假狀態完成`);
+    });
+}
+
 function saveUser(userId, user) {
   return database.ref('users/' + userId).set(user);
 }
@@ -345,43 +393,34 @@ app.listen(port, () => {
   console.log(`listening on ${port}`);
 });
 
-cron.schedule(config.goWorkMorningCron, () => {
-  console.log('執行早上自動上班打卡');
-  autoSignIn(true, false);
-});
+// cron.schedule(config.goWorkMorningCron, () => {
+//   console.log('執行早上自動上班打卡');
+//   autoSignIn(true, false);
+// });
 
-cron.schedule(config.offWorkMorningCron, () => {
-  console.log('執行早上自動下班打卡');
-  autoSignIn(true, true);
-});
+// cron.schedule(config.offWorkMorningCron, () => {
+//   console.log('執行早上自動下班打卡');
+//   autoSignIn(true, true);
+// });
 
-cron.schedule(config.goWorkAfternoonCron, () => {
-  console.log('執行下午自動上班打卡');
-  autoSignIn(false, false);
-});
+// cron.schedule(config.goWorkAfternoonCron, () => {
+//   console.log('執行下午自動上班打卡');
+//   autoSignIn(false, false);
+// });
 
-cron.schedule(config.offWorkAfternoonCron, () => {
-  console.log('執行下午自動下班打卡');
-  autoSignIn(false, true);
-});
+// cron.schedule(config.offWorkAfternoonCron, () => {
+//   console.log('執行下午自動下班打卡');
+//   autoSignIn(false, true);
+// });
 
-cron.schedule(config.resetWorkStateCron, () => {
-  console.log('重置請假狀態');
-  readUsers()
-    .then(users => {
-      return users.forEach(user => takeLeave(user.userId, true, true))
-        .catch(e => {
-          console.log(`重置 ${user.userId} 請假狀態失敗: ${e}`);
-        });
-    })
-    .then(() => {
-      console.log(`重置請假狀態完成`);
-    });
-});
+// cron.schedule(config.resetWorkStateCron, () => {
+//   console.log('重置請假狀態');
+//   resetWorkState();
+// });
 
-cron.schedule('0 */10 * * * *', () => {
-  console.log(`auto ping to ${config.pingServer}`);
-  request.get(config.pingServer, {}, (err, response) => {
-    console.log(`auto ping to ${config.pingServer} done`);
-  });
-});
+// cron.schedule('0 */10 * * * *', () => {
+//   console.log(`auto ping to ${config.pingServer}`);
+//   request.get(config.pingServer, {}, (err, response) => {
+//     console.log(`auto ping to ${config.pingServer} done`);
+//   });
+// });
