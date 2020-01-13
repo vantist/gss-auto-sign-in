@@ -288,7 +288,7 @@ function autoSignIn(isMorning, isOffWork) {
     .then(users => {
       users.forEach(user => {
         let offset = getRandom(0, 20) * 60 * 1000;
-        console.log(`enqeeue auto Sign In for ${user.userId} , wait ${offset} ms`);
+        console.log(`enqeeue auto Sign In for ${user.account} , wait ${offset / 60000} mins`);
 
         setTimeout(function(user) {
           if (!(user.account && user.password)) {
@@ -323,7 +323,7 @@ function autoSignIn(isMorning, isOffWork) {
           .then(message => {
             if (!config.enablePushMessages) return;
             let reply = { type: 'text', text: message };
-            return client.pushMessage(userId, reply);
+            return client.pushMessage(user.userId, reply);
           });
         }.bind(null, user), offset);
       });
