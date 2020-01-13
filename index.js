@@ -2,9 +2,7 @@
 
 const line = require('@line/bot-sdk');
 const express = require('express');
-const cron = require('node-cron');
 const signin = require('./sign_in.js');
-const request = require('request');
 const bodyParser = require('body-parser');
 const firebase = require("firebase/app");
 require('firebase/database');
@@ -369,10 +367,9 @@ function readUsers() {
 function resetWorkState() {
   readUsers()
     .then(users => {
-      return Promise.all(users.map(user => takeLeave(user.userId, true, true))
-        .catch(e => {
-          console.log(`重置 ${user.userId} 請假狀態失敗: ${e}`);
-        }));
+      return Promise.all(users.map(user => takeLeave(user.userId, true, true).catch(e => {
+        console.log(`重置 ${user.userId} 請假狀態失敗: ${e}`);
+      })));
     })
     .then(() => {
       console.log(`重置請假狀態完成`);
@@ -392,35 +389,3 @@ const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`listening on ${port}`);
 });
-
-// cron.schedule(config.goWorkMorningCron, () => {
-//   console.log('執行早上自動上班打卡');
-//   autoSignIn(true, false);
-// });
-
-// cron.schedule(config.offWorkMorningCron, () => {
-//   console.log('執行早上自動下班打卡');
-//   autoSignIn(true, true);
-// });
-
-// cron.schedule(config.goWorkAfternoonCron, () => {
-//   console.log('執行下午自動上班打卡');
-//   autoSignIn(false, false);
-// });
-
-// cron.schedule(config.offWorkAfternoonCron, () => {
-//   console.log('執行下午自動下班打卡');
-//   autoSignIn(false, true);
-// });
-
-// cron.schedule(config.resetWorkStateCron, () => {
-//   console.log('重置請假狀態');
-//   resetWorkState();
-// });
-
-// cron.schedule('0 */10 * * * *', () => {
-//   console.log(`auto ping to ${config.pingServer}`);
-//   request.get(config.pingServer, {}, (err, response) => {
-//     console.log(`auto ping to ${config.pingServer} done`);
-//   });
-// });

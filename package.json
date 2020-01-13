@@ -31,7 +31,6 @@
     "express": "^4.17.1",
     "firebase": "^7.6.2",
     "jsdom": "^15.2.1",
-    "node-cron": "^2.0.3",
     "request": "^2.88.0"
   }
 }
