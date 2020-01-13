@@ -276,7 +276,7 @@ function getRandom(min, max) {
 
 function getTime() {
   let date = new Date();
-  date.setTime(date.getTime() - 15000);
+  date.setTime(date.getTime() - 60000);
   let hour = `${date.getHours()}`.padStart(2, '0');
   let minute = `${date.getMinutes()}`.padStart(2, '0');
   let time = `${hour}${minute}`;
