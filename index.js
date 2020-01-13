@@ -12,7 +12,6 @@ const config = {
   enablePushMessages: !!process.env.ENABLE_PUSH_MESSAGES,
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
   channelSecret: process.env.CHANNEL_SECRET,
-  pingServer: process.env.PING_TARGET_SERVER,
   firebase: {
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: `${process.env.FIREBASE_PROJECT_ID}.firebaseapp.com`,
