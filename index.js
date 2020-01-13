@@ -13,11 +13,6 @@ const config = {
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
   channelSecret: process.env.CHANNEL_SECRET,
   pingServer: process.env.PING_TARGET_SERVER,
-  goWorkMorningCron: process.env.GO_WORK_MONRING_CRON || '0 0 9 * * 1-5',
-  offWorkMorningCron: process.env.OFF_WORK_MONRING_CRON || '0 0 12 * * 1-5',
-  goWorkAfternoonCron: process.env.GO_WORK_AFTERNOON_CRON || '0 30 12 * * 1-5',
-  offWorkAfternoonCron: process.env.OFF_WORK_AFTERNOON_CRON || '0 0 18 * * 1-5',
-  resetWorkStateCron: process.env.RESET_WORK_STATE_CRON || '0 0 0 * * 1-5',
   firebase: {
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: `${process.env.FIREBASE_PROJECT_ID}.firebaseapp.com`,
