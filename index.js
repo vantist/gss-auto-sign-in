@@ -121,9 +121,7 @@ app.post('/setting', bodyParser.json(), (req, res) => {
         .then(() => ({ status: 500, message: `帳號綁定失敗，${req.body.account} 登入測試發生錯誤` }))
         .catch(e => ({ status: 500, message: `帳號綁定失敗，${req.body.account} 登入測試發生錯誤` }));
     }).then(data => {
-      if (!config.enablePushMessages) return;
-      let reply = { type: 'text', text: data.message };
-      client.pushMessage(req.body.userId, reply);
+      pushMessage(req.body.userId, data.message);
       res.status(data.status).send(data.message);
     });
 });
@@ -147,9 +145,7 @@ app.post('/cancel', bodyParser.json(), (req, res) => {
     .then(() => ({ status: 200, message: '帳號取消綁定成功'}))
     .catch(() => ({ status: 500, message: '帳號取消綁定失敗'}))
     .then(data => {
-      if (!config.enablePushMessages) return;
-      let reply = { type: 'text', text: data.message };
-      client.pushMessage(req.body.userId, reply);
+      pushMessage(req.body.userId, data.message);
       res.sendStatus(data.status);
     });
 });
@@ -163,9 +159,7 @@ app.post('/reset', bodyParser.json(), (req, res) => {
   .then(() => ({ status: 200, message: '重置請假狀態成功'}))
   .catch(() => ({ status: 500, message: '重置請假狀態失敗'}))
   .then(data => {
-    if (!config.enablePushMessages) return;
-    let reply = { type: 'text', text: data.message };
-    client.pushMessage(req.body.userId, reply);
+    pushMessage(req.body.userId, data.message);
     res.sendStatus(data.status);
   });
 });
@@ -202,53 +196,35 @@ function handleEvent(event) {
       .then(user => signin.login(user.account, user.password))
       .then(() => '登入成功')
       .catch(e => '登入失敗: ' + e)
-      .then(message => {
-        let reply = { type: 'text', text: message };
-        return client.replyMessage(event.replyToken, reply);
-      });
+      .then(message => replyMessage(event.replyToken, message));
   } else if (text === '打卡') {
     return checkAccountPassword(userId)
       .then(readUser.bind(null, userId))
       .then(user => signin.signin(user.account, user.password, getTime()))
       .catch(e => '打卡失敗: ' + e)
-      .then(message => {
-        let reply = { type: 'text', text: message };
-        return client.replyMessage(event.replyToken, reply);
-      });
+      .then(message => replyMessage(event.replyToken, message));
   } else if (text === '請整天') {
     return checkAccountPassword(userId)
       .then(takeLeave.bind(null, userId, false, false))
       .then(() => '已標記請整天，今天將不自動打卡')
       .catch(e => '標記請整天失敗: ' + e)
-      .then(message => {
-        let reply = { type: 'text', text: message };
-        return client.replyMessage(event.replyToken, reply);
-      });
+      .then(message => replyMessage(event.replyToken, message));
   } else if (text === '請早上') {
     return checkAccountPassword(userId)
       .then(takeLeave.bind(null, userId, false, true))
       .then(() => '已標記請早上，今天早上將不自動打卡')
       .catch(e => '標記請早上失敗: ' + e)
-      .then(message => {
-        let reply = { type: 'text', text: message };
-        return client.replyMessage(event.replyToken, reply);
-      });
+      .then(message => replyMessage(event.replyToken, message));
   } else if (text === '請下午') {
     return checkAccountPassword(userId)
       .then(takeLeave.bind(null, userId, true, false))
       .then(() => '已標記請下午，今天下午將不自動打卡')
       .catch(e => '標記請下午失敗: ' + e)
-      .then(message => {
-        let reply = { type: 'text', text: message };
-        return client.replyMessage(event.replyToken, reply);
-      });
+      .then(message => replyMessage(event.replyToken, message));
   } else {
     return readHelp()
       .catch(() => `help：\n測試帳號連線：登入測試\n立即打卡：打卡\n或使用選單功能。`)
-      .then(message => {
-        let reply = { type: 'text', text: message };
-        return client.replyMessage(event.replyToken, reply);
-      });
+      .then(message => replyMessage(event.replyToken, message));
   }
 }
 
@@ -290,33 +266,17 @@ function autoSignIn(isMorning, isOffWork) {
         let offset = getRandom(0, 20) * 60 * 1000;
         console.log(`enqeeue auto Sign In for ${user.account} , wait ${offset / 60000} mins`);
 
-        setTimeout(function(user) {
-          if (!(user.account && user.password)) {
-            return;
-          }
-    
-          if (user.workMorning && isMorning && isOffWork) {
-            return;
-          }
-    
-          if (user.workAfternoon && !isMorning && !isOffWork) {
-            return;
-          }
-    
-          if (!user.workMorning && isMorning) {
-            if (!config.enablePushMessages) return;
-            let reply = { type: 'text', text: '早上已標記請假，不自動打卡' };
-            client.pushMessage(user.userId, reply);
-            return;
-          }
-    
-          if (!user.workAfternoon && !isMorning) {
-            if (!config.enablePushMessages) return;
-            let reply = { type: 'text', text: '下午已標記請假，不自動打卡' };
-            client.pushMessage(user.userId, reply);
-            return;
-          }
-    
+        if (!(!isMorning && !isOffWork && !user.workMorning && user.workAfternoon ||
+            !isMorning && isOffWork && !user.workMorning && user.workAfternoon ||
+            !isMorning && isOffWork && user.workMorning && user.workAfternoon ||
+            isMorning && !isOffWork && user.workMorning && !user.workAfternoon ||
+            isMorning && !isOffWork && user.workMorning && user.workAfternoon ||
+            isMorning && isOffWork && user.workMorning && !user.workAfternoon)) {
+          console.log(`${user.account} take a leave, so cancel auto Sign In`);
+          return;
+        }
+
+        setTimeout(function(user) {    
           console.log(`auto Sign In for ${user.account}`);
           signin.signin(user.account, user.password, getTime())
           .catch(e => '打卡失敗: ' + e)
@@ -353,7 +313,7 @@ function readUsers() {
     .then(snapshot => snapshot.val())
     .then(users => {
       return Object.keys(users)
-        .filter(userId => users[userId])
+        .filter(userId => { return users[userId] && users[userId].account && users[userId].password; })
         .map(userId => ({ userId, ...users[userId] }));
     })
 }
@@ -376,6 +336,17 @@ function saveUser(userId, user) {
 
 function deleteUser(userId) {
   return saveUser(userId, null);
+}
+
+function pushMessage(userId, message) {
+  if (!config.enablePushMessages) return;
+  let reply = { type: 'text', text: message };
+  client.pushMessage(userId, reply);
+}
+
+function replyMessage(replyToken, message) {
+  let reply = { type: 'text', text: message };
+  return client.replyMessage(replyToken, reply);
 }
 
 // listen on port
