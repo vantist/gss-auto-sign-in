@@ -279,12 +279,12 @@ function autoSignIn(isMorning, isOffWork) {
         setTimeout(function(user) {    
           console.log(`auto Sign In for ${user.account}`);
           signin.signin(user.account, user.password, getTime())
+          .then(message => { 
+            console.log(`auto Sign In for ${user.account}, ${message}`);
+            return message;
+          })
           .catch(e => '打卡失敗: ' + e)
-          .then(message => {
-            if (!config.enablePushMessages) return;
-            let reply = { type: 'text', text: message };
-            return client.pushMessage(user.userId, reply);
-          });
+          .then(message => pushMessage(user.userId, message));
         }.bind(null, user), offset);
       });
     });
