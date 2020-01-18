@@ -357,10 +357,10 @@ function replyMessage(replyToken, message) {
 const port = process.env.PORT || 8080;
 let server = app;
 
-if (certPath && privateKeyPath) {
+if (config.certPath && config.privateKeyPath) {
   server = https.createServer({
-    key: fs.readFileSync(certPath),
-    cert: fs.readFileSync(privateKeyPath)
+    key: fs.readFileSync(config.certPath),
+    cert: fs.readFileSync(config.privateKeyPath)
   }, app);
 }
 
