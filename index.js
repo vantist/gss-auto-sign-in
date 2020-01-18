@@ -4,7 +4,9 @@ const line = require('@line/bot-sdk');
 const express = require('express');
 const signin = require('./sign_in.js');
 const bodyParser = require('body-parser');
-const firebase = require("firebase/app");
+const firebase = require('firebase/app');
+const https = require('https');
+const fs = require('fs');
 require('firebase/database');
 
 // create LINE SDK config from env variables
@@ -19,6 +21,8 @@ const config = {
     projectId: process.env.FIREBASE_PROJECT_ID,
     storageBucket: `${process.env.FIREBASE_PROJECT_ID}.appspot.com`,
   },
+  certPath: process.env.CERT_PATH,
+  privateKeyPath: process.env.PRIVATE_KEY_PATH,
 };
 
 /**
@@ -351,6 +355,15 @@ function replyMessage(replyToken, message) {
 
 // listen on port
 const port = process.env.PORT || 8080;
-app.listen(port, () => {
+let server = app;
+
+if (certPath && privateKeyPath) {
+  server = https.createServer({
+    key: fs.readFileSync(certPath),
+    cert: fs.readFileSync(privateKeyPath)
+  }, app);
+}
+
+server.listen(port, () => {
   console.log(`listening on ${port}`);
 });
