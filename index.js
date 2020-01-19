@@ -21,8 +21,11 @@ const config = {
     projectId: process.env.FIREBASE_PROJECT_ID,
     storageBucket: `${process.env.FIREBASE_PROJECT_ID}.appspot.com`,
   },
-  certPath: process.env.CERT_PATH,
-  privateKeyPath: process.env.PRIVATE_KEY_PATH,
+  credentials: {
+    cert: process.env.CERT_PATH,
+    key: process.env.PRIVATE_KEY_PATH,
+    ca: process.env.CA_PATH,
+  },
 };
 
 /**
@@ -357,11 +360,13 @@ function replyMessage(replyToken, message) {
 const port = process.env.PORT || 8080;
 let server = app;
 
-if (config.certPath && config.privateKeyPath) {
-  server = https.createServer({
-    key: fs.readFileSync(config.certPath),
-    cert: fs.readFileSync(config.privateKeyPath)
-  }, app);
+if (config.credentials.cert && config.credentials.key && config.credentials.ca) {
+  let credentials = {
+    cert: fs.readFileSync(config.credentials.cert, 'utf-8'),
+    key: fs.readFileSync(config.credentials.key, 'utf-8'),
+    ca: fs.readFileSync(config.credentials.ca, 'utf-8'),
+  }
+  server = https.createServer(credentials, app);
 }
 
 server.listen(port, () => {
