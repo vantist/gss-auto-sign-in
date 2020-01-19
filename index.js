@@ -49,7 +49,7 @@ const client = new line.Client(config);
 const app = express();
 
 // static files
-app.use('/liff', express.static('liff'));
+app.use('/liff', express.static(__dirname + '/liff'));
 
 // register a webhook handler with middleware
 // about the middleware, please refer to doc
