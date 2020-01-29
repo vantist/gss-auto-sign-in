@@ -4,7 +4,7 @@ const line = require('@line/bot-sdk');
 const express = require('express');
 const signin = require('./sign_in.js');
 const bodyParser = require('body-parser');
-const firebase = require('firebase/app');
+const firebase = require("firebase-admin");
 const https = require('https');
 const fs = require('fs');
 require('firebase/database');
@@ -15,12 +15,8 @@ const config = {
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
   channelSecret: process.env.CHANNEL_SECRET,
   firebase: {
-    apiKey: process.env.FIREBASE_API_KEY,
-    authDomain: `${process.env.FIREBASE_PROJECT_ID}.firebaseapp.com`,
     databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`,
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    storageBucket: `${process.env.FIREBASE_PROJECT_ID}.appspot.com`,
-    accessId: process.env.FIREBASE_ACCESS_ID,
+    credential: firebase.credential.cert(require(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)),
   },
   credentials: {
     cert: process.env.CERT_PATH,
@@ -39,11 +35,6 @@ const config = {
  */
 
 firebase.initializeApp(config.firebase);
-firebase.auth().signInWithCustomToken({ accessId: config.firebase.accessId }).catch(function(error) {
-  var errorCode = error.code;
-  var errorMessage = error.message;
-  console.error(errorCode, errorMessage);
-});
 // Get a reference to the database service
 const database = firebase.database();
 
