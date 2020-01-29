@@ -20,6 +20,7 @@ const config = {
     databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`,
     projectId: process.env.FIREBASE_PROJECT_ID,
     storageBucket: `${process.env.FIREBASE_PROJECT_ID}.appspot.com`,
+    accessId: process.env.FIREBASE_ACCESS_ID,
   },
   credentials: {
     cert: process.env.CERT_PATH,
@@ -38,6 +39,11 @@ const config = {
  */
 
 firebase.initializeApp(config.firebase);
+firebase.auth().signInWithCustomToken({ accessId: config.firebase.accessId }).catch(function(error) {
+  var errorCode = error.code;
+  var errorMessage = error.message;
+  console.error(errorCode, errorMessage);
+});
 // Get a reference to the database service
 const database = firebase.database();
 
