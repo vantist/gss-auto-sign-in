@@ -70,9 +70,12 @@ let signin = (request, time) => {
 
     return promise_request(request, options).then(response => {
         const { document } = (new JSDOM(response.body)).window;
-        let viewState = document.querySelector('input[name="__VIEWSTATE"]') ? document.querySelector('input[name="__VIEWSTATE"]').getAttribute('value') : null;
-        let widgetName = document.querySelector('input[name$="CheckInByTime"]') ? document.querySelector('input[name$="CheckInByTime"]').getAttribute('name') : null;
-        let timeAttributeName = document.querySelector('input[name$="$txtTime$EditText"]') ? document.querySelector('input[name$="$txtTime$EditText"]').getAttribute('name') : null;
+        let $viewState = document.querySelector('input[name="__VIEWSTATE"]');
+        let $checkByTime = document.querySelector('input[name$="CheckInByTime"]');
+        let $editText = document.querySelector('input[name$="$txtTime$EditText"]');
+        let viewState = $viewState ? $viewState.getAttribute('value') : null;
+        let widgetName = $checkByTime ? $checkByTime.getAttribute('name') : null;
+        let timeAttributeName = $editText ? $editText.getAttribute('name') : null;
         let widgetX = widgetName + '.x';
         let widgetY = widgetName + '.y';
         let form = {
@@ -80,7 +83,18 @@ let signin = (request, time) => {
             '__VIEWSTATE': viewState,
             '__ASYNCPOST': true
         };
-        if (!viewState || !widgetName || timeAttributeName) throw new Error('載入 Smart Form 電子表單發生錯誤。');
+        if (!viewState) {
+            console.error('input[name="__VIEWSTATE"] 取得失敗。');
+            throw new Error('載入 Smart Form 電子表單發生錯誤。');
+        }
+        if (!widgetName) {
+            console.error('input[name$="CheckInByTime"] 取得失敗。');
+            throw new Error('載入 Smart Form 電子表單發生錯誤。');
+        }
+        if (!timeAttributeName) {
+            console.error('input[name$="$txtTime$EditText"] 取得失敗。');
+            throw new Error('載入 Smart Form 電子表單發生錯誤。');
+        }
         form[widgetX] = 57;
         form[widgetY] = 64;
         form[timeAttributeName] = time;
