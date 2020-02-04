@@ -56,7 +56,7 @@ let login = (request, account, password) => {
         }
     }).catch((e) => {
         console.error(e);
-        throw new Error('不知名錯誤');
+        throw new Error('不知名錯誤。');
     });
 };
 
@@ -70,9 +70,9 @@ let signin = (request, time) => {
 
     return promise_request(request, options).then(response => {
         const { document } = (new JSDOM(response.body)).window;
-        let viewState = document.querySelector('input[name="__VIEWSTATE"]').getAttribute('value');
-        let widgetName = document.querySelector('input[name$="CheckInByTime"]').getAttribute('name');
-        let timeAttributeName = document.querySelector('input[name$="$txtTime$EditText"]').getAttribute('name');
+        let viewState = document.querySelector('input[name="__VIEWSTATE"]') ? document.querySelector('input[name="__VIEWSTATE"]').getAttribute('value') : null;
+        let widgetName = document.querySelector('input[name$="CheckInByTime"]') ? document.querySelector('input[name$="CheckInByTime"]').getAttribute('name') : null;
+        let timeAttributeName = document.querySelector('input[name$="$txtTime$EditText"]') ? document.querySelector('input[name$="$txtTime$EditText"]').getAttribute('name') : null;
         let widgetX = widgetName + '.x';
         let widgetY = widgetName + '.y';
         let form = {
@@ -80,7 +80,7 @@ let signin = (request, time) => {
             '__VIEWSTATE': viewState,
             '__ASYNCPOST': true
         };
-        if (!viewState || !widgetName) throw new Error('Smart Form 錯誤');
+        if (!viewState || !widgetName || timeAttributeName) throw new Error('載入 Smart Form 電子表單發生錯誤。');
         form[widgetX] = 57;
         form[widgetY] = 64;
         form[timeAttributeName] = time;
@@ -93,10 +93,13 @@ let signin = (request, time) => {
     }).then(response => {
         let reqex = /.*scriptStartupBlock\|ScriptContentNoTags\|alert\(\'(.*)\'\);.*/;
         if (!reqex.test(response.body)) {
-            throw new Error('打卡失敗');
+            throw new Error('Smart Form 電子表單回應未預期。');
         }
         return reqex.exec(response.body)[1];
-    }).catch(console.error);
+    }).catch((e) => {
+        console.error(e);
+        throw new Error(e);
+    });
 };
 
 module.exports = {
