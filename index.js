@@ -7,7 +7,6 @@ const bodyParser = require('body-parser');
 const firebase = require("firebase-admin");
 const https = require('https');
 const fs = require('fs');
-require('firebase/database');
 
 // create LINE SDK config from env variables
 const config = {
