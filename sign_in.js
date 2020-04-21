@@ -26,6 +26,7 @@ let login = (request, account, password) => {
     }).then((response) => {
         const { document } = (new JSDOM(response.body)).window;
         if (document.title === 'Smart Form 電子表單') {
+            console.log(`${account} 已經登入過.`);
             return { response };
         }
         let lt = document.querySelector('input[name="lt"]').getAttribute('value');
@@ -45,10 +46,13 @@ let login = (request, account, password) => {
                 host: ssoOptions.host,
                 '_eventId': ssoOptions.eventId
             },
+        }).catch((e) => {
+            console.error(e);
+            throw new Error('CAS 登入失敗');
         });
     }).then((response) => {
         const { document } = (new JSDOM(response.body)).window;
-        if (document.title !== 'Smart Form 電子表單') {
+        if (document.title.trim() !== 'Smart Form 電子表單') {
             console.error(`${account} SSO 登入失敗`);
             throw new Error('login failed');
         } else {
@@ -120,13 +124,13 @@ module.exports = {
     signin: (account, password, time) => {
         const request = require('request');
         const j = request.jar();
-        let rq = request.defaults({ jar: j, 'proxy': 'http://nas.vantist.tw:3128' });
+        const rq = request.defaults({ jar: j });
         return login(rq, account, password).then(signin.bind(null, rq, time));
     },
     login: (account, password) => {
         const request = require('request');
         const j = request.jar();
-        let rq = request.defaults({ jar: j, 'proxy': 'http://nas.vantist.tw:3128' });
+        const rq = request.defaults({ jar: j });
         return login(rq, account, password);
     }
 }
